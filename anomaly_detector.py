@@ -215,24 +215,111 @@ def detect_syn_flood(flows):
     
     return syn_floods
 
-def detect_data_exfiltration(flows, size_threshold=5000, rate_threshold=100000):
-    """Detect potential data exfiltration: large outbound data transfers"""
+def is_known_service(dst_ip):
+    """Check if destination is a known legitimate service"""
+    known_services = {
+        # Public DNS
+        "8.8.8.8", "8.8.4.4",  # Google DNS
+        "1.1.1.1", "1.0.0.1",  # Cloudflare DNS
+        "9.9.9.9",              # Quad9 DNS
+        # Add more as needed
+    }
+    
+    # Check if IP starts with known service ranges
+    known_ranges = [
+        "8.8.",      # Google
+        "1.1.",      # Cloudflare
+        "1.0.",      # Cloudflare
+    ]
+    
+    if dst_ip in known_services:
+        return True
+    
+    for range_prefix in known_ranges:
+        if dst_ip.startswith(range_prefix):
+            return True
+    
+    return False
+
+def detect_data_exfiltration(flows, internal_ips, size_threshold=500000, rate_threshold=50000, packet_threshold=50):
+    """
+    Detect potential data exfiltration with improved heuristics
+    
+    Key changes:
+    - Ignore ICMP traffic (usually just pings)
+    - Focus on TCP/UDP flows with sustained high volume
+    - Require minimum packet count to avoid false positives
+    - Higher thresholds for total bytes and rate
+    - Stricter scoring system
+    """
     exfil_candidates = []
-    
+
     for flow_key, flow in flows.items():
-        # Check for large total bytes
+        # Skip ICMP - typically not used for exfiltration
+        if flow.key.proto == "ICMP":
+            continue
+        
+        # Only examine outbound flows from internal networks
+        if flow.key.src_ip not in internal_ips or flow.key.dst_ip in internal_ips:
+            continue
+        
+        # Skip flows with too few packets (likely normal requests)
+        if len(flow.packets) < packet_threshold:
+            continue
+        
+        # Calculate score based on suspicious characteristics
+        score = 0
+        reasons = []
+        
+        # Very large total transfer (>500KB)
         if flow.total_bytes > size_threshold:
-            byte_rate = flow.get_byte_rate()
-            if byte_rate > rate_threshold:
-                exfil_candidates.append({
-                    'flow': str(flow_key),
-                    'total_bytes': flow.total_bytes,
-                    'byte_rate': byte_rate,
-                    'duration': flow.get_duration(),
-                    'packets': len(flow.packets)
-                })
-    
+            score += 3
+            reasons.append(f"large_transfer_{flow.total_bytes}_bytes")
+        
+        # High sustained transfer rate (>50KB/s)
+        byte_rate = flow.get_byte_rate()
+        if byte_rate > rate_threshold:
+            score += 3
+            reasons.append(f"high_rate_{byte_rate:.0f}_Bps")
+        
+        # Uncommon destination (not known service)
+        if not is_known_service(flow.key.dst_ip):
+            score += 2
+            reasons.append("unknown_destination")
+        
+        # Off-hours activity (before 6am or after 10pm)
+        if flow.start_time:
+            start_dt = datetime.fromtimestamp(flow.start_time)
+            if start_dt.hour < 6 or start_dt.hour >= 22:
+                score += 1
+                reasons.append("off_hours")
+        
+        # Unusual port for large transfers
+        suspicious_ports = [443, 8080, 8443, 9090]  # Common exfil ports
+        if flow.key.dst_port not in [80, 443] and flow.total_bytes > 100000:
+            score += 1
+            reasons.append(f"unusual_port_{flow.key.dst_port}")
+        
+        # Long duration with sustained activity
+        duration = flow.get_duration()
+        if duration > 60 and len(flow.packets) > 100:  # >1 min, >100 packets
+            score += 2
+            reasons.append(f"sustained_activity_{duration:.0f}s")
+
+        # Flag if score is high enough (stricter threshold)
+        if score >= 7:  # Increased from 5 to reduce false positives
+            exfil_candidates.append({
+                'flow': str(flow_key),
+                'total_bytes': flow.total_bytes,
+                'byte_rate': byte_rate,
+                'duration': duration,
+                'packets': len(flow.packets),
+                'score': score,
+                'reasons': reasons
+            })
+
     return exfil_candidates
+
 
 def detect_beaconing(flows, regularity_threshold=0.15):
     """Detect C2 beaconing: regular periodic communication"""
@@ -415,6 +502,21 @@ def generate_report(packets, flows, anomalies, stats, output_format='text'):
     
     return "\n".join(lines)
 
+
+def is_private(ip):
+    return (
+        ip.startswith("10.") or
+        ip.startswith("192.168.") or
+        ip.startswith("172.16.") or ip.startswith("172.17.") or
+        ip.startswith("172.18.") or ip.startswith("172.19.") or
+        ip.startswith("172.20.") or ip.startswith("172.21.") or
+        ip.startswith("172.22.") or ip.startswith("172.23.") or
+        ip.startswith("172.24.") or ip.startswith("172.25.") or
+        ip.startswith("172.26.") or ip.startswith("172.27.") or
+        ip.startswith("172.28.") or ip.startswith("172.29.") or
+        ip.startswith("172.30.") or ip.startswith("172.31.")
+    )
+
 def main():
     if len(sys.argv) < 2:
         print("Usage: python advanced_anomaly_detector.py <pcap> [options]")
@@ -424,6 +526,12 @@ def main():
         print("  --threshold <n>     Z-score threshold (default: 3.0)")
         print("  --whitelist <ips>   Comma-separated IPs to ignore")
         return
+    
+    known_destinations = {
+    "8.8.8.8",  # Google DNS
+    "13.35.0.0/16",  # AWS services
+    "40.112.0.0/16", # Azure services
+}
     
     pcap_path = sys.argv[1]
     output_format = 'text'
@@ -457,6 +565,7 @@ def main():
         print("[!] No packets found in PCAP")
         return
     
+    
     print(f"[+] Loaded {len(packets)} packets in {len(flows)} flows")
     
     # Perform analysis
@@ -465,9 +574,18 @@ def main():
     sizes = [p['size'] for p in packets]
     size_anomalies, size_mean, size_std = detect_size_anomalies(sizes, threshold)
     
+    # Build internal IP list after parsing PCAP
+    ip_counter = Counter()
+    for flow in flows.values():
+        ip_counter[flow.key.src_ip] += 1
+        ip_counter[flow.key.dst_ip] += 1
+
+    internal_ips = set(ip for ip in ip_counter if is_private(ip))
+
+    
     port_scanning = detect_port_scanning(flows)
     syn_floods = detect_syn_flood(flows)
-    data_exfil = detect_data_exfiltration(flows)
+    data_exfil = detect_data_exfiltration(flows, internal_ips)
     beaconing = detect_beaconing(flows)
     proto_anomalies = detect_protocol_anomalies(flows)
     
@@ -495,7 +613,4 @@ def main():
         print(report)
 
 if __name__ == "__main__":
-    main()
-
-    #test push by carter blaesing
-    
+    main()    
