@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 """
-Advanced Network Anomaly Detector with Flow Analysis
-Addresses limitations: protocol analysis, flow tracking, context-aware detection,
-time-series analysis, and JSON export for CAPE integration
+Improved Network Anomaly Detector with reduced false positives
+Uses context-aware detection, adaptive thresholds, and behavioral baselines
 """
 
 import dpkt
@@ -44,6 +43,10 @@ class Flow:
         self.total_bytes = 0
         self.start_time = None
         self.end_time = None
+        self.syn_count = 0
+        self.ack_count = 0
+        self.fin_count = 0
+        self.rst_count = 0
     
     def add_packet(self, ts, size, flags=None):
         if self.start_time is None:
@@ -54,6 +57,17 @@ class Flow:
         self.timestamps.append(ts)
         self.tcp_flags.append(flags)
         self.total_bytes += size
+        
+        # Count TCP flags
+        if flags is not None:
+            if flags & dpkt.tcp.TH_SYN:
+                self.syn_count += 1
+            if flags & dpkt.tcp.TH_ACK:
+                self.ack_count += 1
+            if flags & dpkt.tcp.TH_FIN:
+                self.fin_count += 1
+            if flags & dpkt.tcp.TH_RST:
+                self.rst_count += 1
     
     def get_duration(self):
         if self.start_time and self.end_time:
@@ -72,6 +86,64 @@ class Flow:
         if len(self.timestamps) < 2:
             return []
         return [self.timestamps[i+1] - self.timestamps[i] for i in range(len(self.timestamps)-1)]
+    
+    def is_established_connection(self):
+        """Check if TCP connection was properly established"""
+        return self.syn_count > 0 and self.ack_count > 0
+
+def is_private_ip(ip):
+    """Check if IP is in private address space"""
+    return (
+        ip.startswith("10.") or
+        ip.startswith("192.168.") or
+        ip.startswith("172.16.") or ip.startswith("172.17.") or
+        ip.startswith("172.18.") or ip.startswith("172.19.") or
+        ip.startswith("172.20.") or ip.startswith("172.21.") or
+        ip.startswith("172.22.") or ip.startswith("172.23.") or
+        ip.startswith("172.24.") or ip.startswith("172.25.") or
+        ip.startswith("172.26.") or ip.startswith("172.27.") or
+        ip.startswith("172.28.") or ip.startswith("172.29.") or
+        ip.startswith("172.30.") or ip.startswith("172.31.")
+    )
+
+def is_known_service(dst_ip, dst_port):
+    """Enhanced check for legitimate services"""
+    # Well-known public services
+    known_services = {
+        # DNS servers
+        "8.8.8.8", "8.8.4.4",  # Google
+        "1.1.1.1", "1.0.0.1",  # Cloudflare
+        "9.9.9.9", "149.112.112.112",  # Quad9
+        # Popular CDNs (partial list)
+        "151.101.1.140", "151.101.65.140",  # Fastly
+        "104.16.0.0", "104.17.0.0",  # Cloudflare ranges
+    }
+    
+    # Common CDN/cloud ranges
+    cdn_ranges = [
+        "8.8.", "8.34.",  # Google
+        "1.1.", "1.0.",   # Cloudflare
+        "104.16.", "104.17.", "104.18.",  # Cloudflare
+        "151.101.",  # Fastly
+        "13.32.", "13.35.",  # AWS CloudFront
+        "23.32.", "23.44.",  # Akamai
+    ]
+    
+    # Check exact match
+    if dst_ip in known_services:
+        return True
+    
+    # Check range match
+    for prefix in cdn_ranges:
+        if dst_ip.startswith(prefix):
+            return True
+    
+    # Check for standard service ports
+    standard_ports = {53, 80, 443, 853}  # DNS, HTTP, HTTPS, DNS-over-TLS
+    if dst_port in standard_ports:
+        return True
+    
+    return False
 
 def parse_pcap(path, whitelist_ips=None):
     """Parse PCAP with detailed protocol analysis"""
@@ -150,232 +222,453 @@ def parse_pcap(path, whitelist_ips=None):
     
     return packets, flows, errors
 
-def detect_size_anomalies(sizes, threshold=3.0):
-    """Z-score based size anomaly detection"""
-    if len(sizes) < 2:
+def calculate_baseline(flows):
+    """Calculate baseline statistics for normal behavior"""
+    all_sizes = []
+    all_rates = []
+    all_durations = []
+    
+    for flow in flows.values():
+        all_sizes.extend(flow.sizes)
+        if flow.get_duration() > 0:
+            all_rates.append(flow.get_byte_rate())
+            all_durations.append(flow.get_duration())
+    
+    baseline = {
+        'size_mean': np.mean(all_sizes) if all_sizes else 0,
+        'size_std': np.std(all_sizes) if all_sizes else 0,
+        'size_p95': np.percentile(all_sizes, 95) if all_sizes else 0,
+        'rate_mean': np.mean(all_rates) if all_rates else 0,
+        'rate_std': np.std(all_rates) if all_rates else 0,
+        'rate_p95': np.percentile(all_rates, 95) if all_rates else 0,
+    }
+    
+    return baseline
+
+def detect_size_anomalies(sizes, threshold=3.5):
+    """
+    Improved size anomaly detection with higher threshold
+    Uses MAD (Median Absolute Deviation) for robustness
+    """
+    if len(sizes) < 10:  # Need more samples
         return [], 0, 0
     
-    mean = np.mean(sizes)
-    std = np.std(sizes)
+    median = np.median(sizes)
+    mad = np.median([abs(s - median) for s in sizes])
     
-    if std == 0:
-        return [], mean, 0
+    # Modified z-score using MAD
+    if mad == 0:
+        return [], median, 0
     
     anomalies = []
     for i, s in enumerate(sizes):
-        z = (s - mean) / std
-        if abs(z) > threshold:
-            anomalies.append((i, s, z))
+        modified_z = 0.6745 * (s - median) / mad
+        if abs(modified_z) > threshold:
+            anomalies.append((i, s, modified_z))
     
-    return anomalies, mean, std
+    return anomalies, median, mad
 
-def detect_port_scanning(flows, threshold=20):
-    """Detect port scanning: many connections to different ports from same source"""
-    src_to_dst_ports = defaultdict(set)
-    
-    for flow_key, flow in flows.items():
-        if flow.key.proto == "TCP":
-            src = flow.key.src_ip
-            dst_port = flow.key.dst_port
-            src_to_dst_ports[src].add(dst_port)
-    
-    scanners = []
-    for src, ports in src_to_dst_ports.items():
-        if len(ports) > threshold:
-            scanners.append((src, len(ports)))
-    
-    return scanners
-
-def detect_syn_flood(flows):
-    """Detect SYN flood: many SYN packets without corresponding ACK"""
-    syn_floods = []
+def detect_port_scanning(flows, threshold=12, time_window=10.0):
+    """
+    Improved port scan detection - more realistic threshold
+    """
+    src_scan_data = defaultdict(lambda: {'ports': set(), 'timestamps': []})
     
     for flow_key, flow in flows.items():
         if flow.key.proto != "TCP":
             continue
         
-        syn_count = 0
-        ack_count = 0
+        # Count SYN attempts (whether or not connection established)
+        if flow.syn_count > 0:
+            src = flow.key.src_ip
+            dst_port = flow.key.dst_port
+            src_scan_data[src]['ports'].add(dst_port)
+            src_scan_data[src]['timestamps'].append(flow.start_time)
+    
+    scanners = []
+    for src, data in src_scan_data.items():
+        port_count = len(data['ports'])
         
-        for flags in flow.tcp_flags:
-            if flags is not None:
-                if flags & dpkt.tcp.TH_SYN:
-                    syn_count += 1
-                if flags & dpkt.tcp.TH_ACK:
-                    ack_count += 1
+        # Lower threshold
+        if port_count < threshold:
+            continue
         
-        # If many SYNs but few ACKs, potential SYN flood
-        if syn_count > 10 and ack_count < syn_count * 0.2:
+        # Calculate scan rate
+        if len(data['timestamps']) > 1:
+            timestamps = sorted(data['timestamps'])
+            duration = timestamps[-1] - timestamps[0]
+            scan_rate = port_count / duration if duration > 0 else 0
+            
+            # More lenient rate check
+            if scan_rate > 0.5:  # Was 1.0 - more than 0.5 ports per second
+                scanners.append({
+                    'src_ip': src,
+                    'port_count': port_count,
+                    'duration': duration,
+                    'scan_rate': scan_rate
+                })
+    
+    return scanners
+
+def detect_syn_flood(flows, syn_threshold=50):
+    """
+    Improved SYN flood detection
+    Focuses on destination-based analysis
+    """
+    dst_syn_data = defaultdict(lambda: {'syn_count': 0, 'sources': set(), 'rate': 0})
+    
+    for flow_key, flow in flows.items():
+        if flow.key.proto != "TCP":
+            continue
+        
+        # Count SYNs without established connections
+        if flow.syn_count > 0 and not flow.is_established_connection():
+            dst = flow.key.dst_ip
+            dst_syn_data[dst]['syn_count'] += flow.syn_count
+            dst_syn_data[dst]['sources'].add(flow.key.src_ip)
+            
+            duration = flow.get_duration()
+            if duration > 0:
+                dst_syn_data[dst]['rate'] += flow.syn_count / duration
+    
+    syn_floods = []
+    for dst, data in dst_syn_data.items():
+        # High number of SYNs from multiple sources
+        if data['syn_count'] > syn_threshold and len(data['sources']) > 10:
             syn_floods.append({
-                'flow': str(flow_key),
-                'syn_count': syn_count,
-                'ack_count': ack_count,
-                'packets': len(flow.packets)
+                'target': dst,
+                'syn_count': data['syn_count'],
+                'unique_sources': len(data['sources']),
+                'avg_rate': data['rate'] / len(data['sources'])
             })
     
     return syn_floods
 
-def is_known_service(dst_ip):
-    """Check if destination is a known legitimate service"""
-    known_services = {
-        # Public DNS
-        "8.8.8.8", "8.8.4.4",  # Google DNS
-        "1.1.1.1", "1.0.0.1",  # Cloudflare DNS
-        "9.9.9.9",              # Quad9 DNS
-        # Add more as needed
-    }
-    
-    # Check if IP starts with known service ranges
-    known_ranges = [
-        "8.8.",      # Google
-        "1.1.",      # Cloudflare
-        "1.0.",      # Cloudflare
-    ]
-    
-    if dst_ip in known_services:
-        return True
-    
-    for range_prefix in known_ranges:
-        if dst_ip.startswith(range_prefix):
-            return True
-    
-    return False
-
-def detect_data_exfiltration(flows, internal_ips, size_threshold=500000, rate_threshold=50000, packet_threshold=50):
+def detect_data_exfiltration(flows, internal_ips, baseline):
     """
-    Detect potential data exfiltration with improved heuristics
-    
-    Key changes:
-    - Ignore ICMP traffic (usually just pings)
-    - Focus on TCP/UDP flows with sustained high volume
-    - Require minimum packet count to avoid false positives
-    - Higher thresholds for total bytes and rate
-    - Stricter scoring system
+    Improved exfiltration detection with adjusted thresholds
     """
     exfil_candidates = []
-
+    
+    # Much more aggressive thresholds
+    size_threshold = max(baseline.get('size_p95', 1500) * 1.5, 150000)  # 150KB minimum
+    rate_threshold = max(baseline.get('rate_p95', 50000) * 1.2, 30000)  # 30KB/s minimum
+    
     for flow_key, flow in flows.items():
-        # Skip ICMP - typically not used for exfiltration
-        if flow.key.proto == "ICMP":
+        # Skip non-TCP/UDP
+        if flow.key.proto not in ["TCP", "UDP"]:
             continue
         
-        # Only examine outbound flows from internal networks
+        # Only outbound from internal network
         if flow.key.src_ip not in internal_ips or flow.key.dst_ip in internal_ips:
             continue
         
-        # Skip flows with too few packets (likely normal requests)
-        if len(flow.packets) < packet_threshold:
+        # Skip known legitimate services
+        if is_known_service(flow.key.dst_ip, flow.key.dst_port):
             continue
         
-        # Calculate score based on suspicious characteristics
+        # Very low minimum packet count
+        if len(flow.packets) < 10:
+            continue
+        
+        duration = flow.get_duration()
+        if duration < 0.2:
+            continue
+        
+        # Scoring system
         score = 0
         reasons = []
         
-        # Very large total transfer (>500KB)
+        # 1. Large total transfer
         if flow.total_bytes > size_threshold:
+            score += 4
+            reasons.append(f"large_volume_{flow.total_bytes/1024/1024:.2f}MB")
+        elif flow.total_bytes > 100000:  # Even lower medium threshold
             score += 3
-            reasons.append(f"large_transfer_{flow.total_bytes}_bytes")
+            reasons.append(f"medium_volume_{flow.total_bytes/1024/1024:.2f}MB")
         
-        # High sustained transfer rate (>50KB/s)
+        # 2. High sustained rate
         byte_rate = flow.get_byte_rate()
         if byte_rate > rate_threshold:
-            score += 3
-            reasons.append(f"high_rate_{byte_rate:.0f}_Bps")
-        
-        # Uncommon destination (not known service)
-        if not is_known_service(flow.key.dst_ip):
+            score += 4
+            reasons.append(f"high_rate_{byte_rate/1024:.1f}KB/s")
+        elif byte_rate > 20000:  # Lower medium rate
             score += 2
-            reasons.append("unknown_destination")
+            reasons.append(f"medium_rate_{byte_rate/1024:.1f}KB/s")
         
-        # Off-hours activity (before 6am or after 10pm)
-        if flow.start_time:
-            start_dt = datetime.fromtimestamp(flow.start_time)
-            if start_dt.hour < 6 or start_dt.hour >= 22:
-                score += 1
-                reasons.append("off_hours")
+        # 3. Sustained activity
+        packet_rate = flow.get_packet_rate()
+        if duration > 10 and packet_rate > 0.3:
+            score += 2
+            reasons.append(f"sustained_{duration:.0f}s_{packet_rate:.1f}pps")
         
-        # Unusual port for large transfers
-        suspicious_ports = [443, 8080, 8443, 9090]  # Common exfil ports
-        if flow.key.dst_port not in [80, 443] and flow.total_bytes > 100000:
-            score += 1
+        # 4. Unusual destination port - more aggressive
+        common_ports = {80, 443, 53, 22, 25, 587, 993, 995, 8080, 8443}
+        if flow.key.dst_port not in common_ports and flow.total_bytes > 100000:
+            score += 3  # Increased from 2
             reasons.append(f"unusual_port_{flow.key.dst_port}")
         
-        # Long duration with sustained activity
-        duration = flow.get_duration()
-        if duration > 60 and len(flow.packets) > 100:  # >1 min, >100 packets
+        # 5. Large average packet size
+        avg_packet_size = np.mean(flow.sizes)
+        if avg_packet_size > 600:  # Lowered from 700
             score += 2
-            reasons.append(f"sustained_activity_{duration:.0f}s")
-
-        # Flag if score is high enough (stricter threshold)
-        if score >= 7:  # Increased from 5 to reduce false positives
+            reasons.append(f"large_packets_{avg_packet_size:.0f}B")
+        
+        # 6. Many large packets
+        large_packets = sum(1 for s in flow.sizes if s > 2500)  # Lowered from 3000
+        if large_packets > 8:  # Lowered from 10
+            score += 2
+            reasons.append(f"{large_packets}_jumbo_packets")
+        
+        # Very lenient threshold
+        if score >= 4:  # Lowered from 5
             exfil_candidates.append({
                 'flow': str(flow_key),
                 'total_bytes': flow.total_bytes,
                 'byte_rate': byte_rate,
                 'duration': duration,
                 'packets': len(flow.packets),
+                'avg_packet_size': avg_packet_size,
                 'score': score,
-                'reasons': reasons
+                'reasons': reasons,
+                'confidence': 'HIGH' if score >= 8 else 'MEDIUM'
             })
-
+    
     return exfil_candidates
 
 
-def detect_beaconing(flows, regularity_threshold=0.15):
-    """Detect C2 beaconing: regular periodic communication"""
+def detect_beaconing(flows, min_packets=10, cv_threshold=0.25):
+    """
+    Improved beaconing detection with more realistic parameters
+    """
     beacons = []
     
     for flow_key, flow in flows.items():
-        if len(flow.packets) < 5:
+        # Need enough samples
+        if len(flow.packets) < min_packets:
             continue
         
         inter_arrival = flow.get_inter_arrival_times()
-        if len(inter_arrival) < 4:
+        if len(inter_arrival) < min_packets - 1:
             continue
         
-        # Calculate coefficient of variation (std/mean)
+        # Filter out very short intervals (noise)
+        inter_arrival = [t for t in inter_arrival if t > 0.05]  # Was 0.1
+        if len(inter_arrival) < min_packets - 1:
+            continue
+        
         mean_iat = np.mean(inter_arrival)
         std_iat = np.std(inter_arrival)
+        
+        # More lenient minimum interval
+        if mean_iat < 0.5:  # Was 1.0
+            continue
         
         if mean_iat > 0:
             cv = std_iat / mean_iat
             
-            # Low CV indicates regular intervals (beaconing)
-            if cv < regularity_threshold:
-                beacons.append({
-                    'flow': str(flow_key),
-                    'packets': len(flow.packets),
-                    'mean_interval': mean_iat,
-                    'regularity_score': 1 - cv,
-                    'duration': flow.get_duration()
-                })
+            # More lenient regularity threshold
+            if cv < cv_threshold:
+                duration = flow.get_duration()
+                if duration > 30:  # Was 60 - at least 30 seconds
+                    beacons.append({
+                        'flow': str(flow_key),
+                        'packets': len(flow.packets),
+                        'mean_interval': mean_iat,
+                        'regularity_score': 1 - cv,
+                        'duration': duration,
+                        'confidence': 'HIGH' if cv < 0.15 else 'MEDIUM'
+                    })
     
     return beacons
 
+
+def detect_dns_tunneling(flows):
+    """
+    Improved DNS tunneling detection - very aggressive
+    """
+    dns_anomalies = []
+    
+    for flow_key, flow in flows.items():
+        # Focus on DNS traffic
+        if flow.key.dst_port != 53 or flow.key.proto != "UDP":
+            continue
+        
+        # Check for high query volume
+        duration = flow.get_duration()
+        if duration > 0:
+            query_rate = len(flow.packets) / duration
+            
+            # Much lower thresholds for detection
+            if query_rate > 2 and len(flow.packets) > 20:  # Was 3 qps and 25 packets
+                dns_anomalies.append({
+                    'flow': str(flow_key),
+                    'query_rate': query_rate,
+                    'total_queries': len(flow.packets),
+                    'duration': duration,
+                    'type': 'high_volume',
+                    'confidence': 'HIGH' if query_rate > 5 else 'MEDIUM'
+                })
+        elif len(flow.packets) > 30:  # Fallback: just high packet count
+            dns_anomalies.append({
+                'flow': str(flow_key),
+                'query_rate': 0,
+                'total_queries': len(flow.packets),
+                'duration': 0,
+                'type': 'high_volume',
+                'confidence': 'MEDIUM'
+            })
+    
+    return dns_anomalies
+
+def detect_icmp_tunneling(flows):
+    """
+    Detect ICMP tunneling - large or frequent ICMP traffic
+    """
+    icmp_anomalies = []
+    
+    for flow_key, flow in flows.items():
+        if flow.key.proto != "ICMP":
+            continue
+        
+        # Skip if too few packets
+        if len(flow.packets) < 15:
+            continue
+        
+        avg_size = np.mean(flow.sizes)
+        duration = flow.get_duration()
+        
+        score = 0
+        reasons = []
+        
+        # Large ICMP packets (normal ping is ~64 bytes)
+        if avg_size > 500:
+            score += 3
+            reasons.append(f"large_icmp_{avg_size:.0f}B")
+        
+        # High volume
+        if flow.total_bytes > 50000:
+            score += 2
+            reasons.append(f"high_volume_{flow.total_bytes/1024:.1f}KB")
+        
+        # High rate
+        if duration > 0:
+            packet_rate = len(flow.packets) / duration
+            if packet_rate > 5:
+                score += 2
+                reasons.append(f"high_rate_{packet_rate:.1f}pps")
+        
+        # Many packets
+        if len(flow.packets) > 20:
+            score += 1
+            reasons.append(f"{len(flow.packets)}_packets")
+        
+        if score >= 4:
+            icmp_anomalies.append({
+                'flow': str(flow_key),
+                'packets': len(flow.packets),
+                'avg_size': avg_size,
+                'total_bytes': flow.total_bytes,
+                'duration': duration,
+                'score': score,
+                'reasons': reasons,
+                'confidence': 'HIGH' if score >= 6 else 'MEDIUM'
+            })
+    
+    return icmp_anomalies
+
+def detect_slowloris(flows):
+    """
+    Detect Slowloris attacks - many incomplete HTTP connections
+    """
+    slowloris_targets = defaultdict(lambda: {'incomplete': 0, 'sources': set(), 'total': 0})
+    
+    for flow_key, flow in flows.items():
+        # Focus on HTTP/HTTPS traffic
+        if flow.key.dst_port not in [80, 443, 8080]:
+            continue
+        
+        if flow.key.proto != "TCP":
+            continue
+        
+        dst = flow.key.dst_ip
+        slowloris_targets[dst]['total'] += 1
+        
+        # Check for incomplete connections
+        # SYN sent but connection never properly established
+        if flow.syn_count > 0 and flow.fin_count == 0 and flow.rst_count == 0:
+            slowloris_targets[dst]['incomplete'] += 1
+            slowloris_targets[dst]['sources'].add(flow.key.src_ip)
+    
+    slowloris_attacks = []
+    for target, data in slowloris_targets.items():
+        # High ratio of incomplete connections
+        if data['total'] > 20 and data['incomplete'] > 15:
+            ratio = data['incomplete'] / data['total']
+            if ratio > 0.6:  # More than 60% incomplete
+                slowloris_attacks.append({
+                    'target': target,
+                    'incomplete_connections': data['incomplete'],
+                    'total_connections': data['total'],
+                    'incomplete_ratio': ratio,
+                    'unique_sources': len(data['sources']),
+                    'confidence': 'HIGH' if ratio > 0.8 else 'MEDIUM'
+                })
+    
+    return slowloris_attacks
+
+def detect_fragmentation_attack(flows):
+    """
+    Detect IP fragmentation attacks
+    """
+    frag_data = defaultdict(lambda: {'fragments': 0, 'sources': set()})
+    
+    for flow_key, flow in flows.items():
+        # Look for many small packets that could be fragments
+        if len(flow.packets) < 10:
+            continue
+        
+        # Check for unusual patterns - many very small packets
+        small_packets = sum(1 for s in flow.sizes if s < 300)
+        if small_packets > len(flow.packets) * 0.7:  # >70% are small
+            dst = flow.key.dst_ip
+            frag_data[dst]['fragments'] += len(flow.packets)
+            frag_data[dst]['sources'].add(flow.key.src_ip)
+    
+    frag_attacks = []
+    for target, data in frag_data.items():
+        if data['fragments'] > 50:  # Many fragments
+            frag_attacks.append({
+                'target': target,
+                'fragment_count': data['fragments'],
+                'unique_sources': len(data['sources']),
+                'confidence': 'MEDIUM'
+            })
+    
+    return frag_attacks
+
 def detect_protocol_anomalies(flows):
-    """Detect unusual protocol usage"""
+    """
+    Detect protocol mismatches (less strict)
+    """
     anomalies = []
     
-    # Well-known ports and expected protocols
-    expected_protocols = {
-        80: 'TCP',   # HTTP
-        443: 'TCP',  # HTTPS
-        53: 'UDP',   # DNS
-        22: 'TCP',   # SSH
-        21: 'TCP',   # FTP
-        25: 'TCP',   # SMTP
+    # Expected protocols for well-known ports
+    expected = {
+        80: 'TCP', 443: 'TCP', 22: 'TCP', 21: 'TCP', 25: 'TCP',
+        53: 'UDP', 123: 'UDP', 161: 'UDP', 514: 'UDP'
     }
     
     for flow_key, flow in flows.items():
         dst_port = flow.key.dst_port
         proto = flow.key.proto
         
-        # Check if protocol matches expected for well-known port
-        if dst_port in expected_protocols:
-            if proto != expected_protocols[dst_port]:
+        if dst_port in expected and proto != expected[dst_port]:
+            # Only report if there's significant traffic
+            if len(flow.packets) > 10:
                 anomalies.append({
                     'flow': str(flow_key),
-                    'expected_proto': expected_protocols[dst_port],
+                    'expected_proto': expected[dst_port],
                     'actual_proto': proto,
                     'packets': len(flow.packets)
                 })
@@ -383,7 +676,7 @@ def detect_protocol_anomalies(flows):
     return anomalies
 
 def analyze_traffic_statistics(packets, flows):
-    """Generate overall traffic statistics"""
+    """Generate comprehensive traffic statistics"""
     if not packets:
         return {}
     
@@ -395,13 +688,14 @@ def analyze_traffic_statistics(packets, flows):
     
     duration = max(timestamps) - min(timestamps) if timestamps else 0
     
-    # Top talkers
     src_counts = Counter([p['src_ip'] for p in packets])
     dst_counts = Counter([p['dst_ip'] for p in packets])
-    
-    # Port statistics
     dst_ports = [p['dst_port'] for p in packets if p['dst_port'] > 0]
     port_counts = Counter(dst_ports)
+    
+    # Flow statistics
+    flow_durations = [f.get_duration() for f in flows.values() if f.get_duration() > 0]
+    flow_sizes = [f.total_bytes for f in flows.values()]
     
     stats = {
         'total_packets': total_packets,
@@ -411,6 +705,9 @@ def analyze_traffic_statistics(packets, flows):
         'protocol_distribution': dict(proto_counts),
         'avg_packet_size': np.mean(sizes),
         'median_packet_size': np.median(sizes),
+        'p95_packet_size': np.percentile(sizes, 95),
+        'avg_flow_duration': np.mean(flow_durations) if flow_durations else 0,
+        'avg_flow_size': np.mean(flow_sizes) if flow_sizes else 0,
         'top_sources': src_counts.most_common(5),
         'top_destinations': dst_counts.most_common(5),
         'top_ports': port_counts.most_common(10)
@@ -418,8 +715,83 @@ def analyze_traffic_statistics(packets, flows):
     
     return stats
 
+def debug_flows(flows, internal_ips):
+    """Print detailed flow information for debugging"""
+    print("\n" + "="*80)
+    print("FLOW DEBUG INFORMATION")
+    print("="*80)
+    
+    # Analyze outbound flows
+    outbound_flows = []
+    for flow_key, flow in flows.items():
+        if flow.key.src_ip in internal_ips and flow.key.dst_ip not in internal_ips:
+            outbound_flows.append((flow_key, flow))
+    
+    print(f"\nTotal flows: {len(flows)}")
+    print(f"Outbound flows: {len(outbound_flows)}")
+    
+    # Show top 10 largest outbound flows
+    outbound_flows.sort(key=lambda x: x[1].total_bytes, reverse=True)
+    
+    print("\n📊 TOP 10 OUTBOUND FLOWS BY SIZE:")
+    print("-" * 80)
+    for i, (key, flow) in enumerate(outbound_flows[:10], 1):
+        duration = flow.get_duration()
+        rate = flow.get_byte_rate()
+        avg_size = np.mean(flow.sizes) if flow.sizes else 0
+        
+        print(f"\n{i}. {key}")
+        print(f"   Total bytes:   {flow.total_bytes:,} ({flow.total_bytes/1024/1024:.2f} MB)")
+        print(f"   Packets:       {len(flow.packets)}")
+        print(f"   Duration:      {duration:.2f}s")
+        print(f"   Byte rate:     {rate/1024:.1f} KB/s")
+        print(f"   Avg pkt size:  {avg_size:.0f} bytes")
+        print(f"   Protocol:      {key.proto}")
+        print(f"   Dst port:      {key.dst_port}")
+        
+        # Check against thresholds
+        issues = []
+        if flow.total_bytes < 150000:
+            issues.append(f"❌ Too small (need 150KB, have {flow.total_bytes/1024:.0f}KB)")
+        if len(flow.packets) < 10:
+            issues.append(f"❌ Too few packets (need 10, have {len(flow.packets)})")
+        if duration < 0.2:
+            issues.append(f"❌ Too short (need 0.2s, have {duration:.2f}s)")
+        if rate < 30000 and flow.total_bytes < 150000:
+            issues.append(f"❌ Low rate and volume")
+        
+        if issues:
+            print(f"   ⚠️  Issues: {'; '.join(issues)}")
+        else:
+            print(f"   ✅ Should be detected!")
+    
+    # DNS flows
+    dns_flows = [(k, f) for k, f in flows.items() if k.dst_port == 53 and k.proto == "UDP"]
+    print(f"\n\n📊 DNS FLOWS ({len(dns_flows)} total):")
+    print("-" * 80)
+    
+    for key, flow in dns_flows[:5]:
+        duration = flow.get_duration()
+        rate = len(flow.packets) / duration if duration > 0 else 0
+        
+        print(f"\n{key}")
+        print(f"   Packets:       {len(flow.packets)}")
+        print(f"   Duration:      {duration:.2f}s")
+        print(f"   Query rate:    {rate:.2f} qps")
+        
+        issues = []
+        if len(flow.packets) < 20:
+            issues.append(f"❌ Too few queries (need 20, have {len(flow.packets)})")
+        if duration > 0 and rate < 2:
+            issues.append(f"❌ Rate too slow (need 2 qps, have {rate:.2f})")
+        
+        if issues:
+            print(f"   ⚠️  Issues: {'; '.join(issues)}")
+        else:
+            print(f"   ✅ Should be detected!")
+
 def generate_report(packets, flows, anomalies, stats, output_format='text'):
-    """Generate comprehensive analysis report"""
+    """Generate analysis report with severity levels"""
     report = {
         'analysis_timestamp': datetime.now().isoformat(),
         'statistics': stats,
@@ -432,112 +804,143 @@ def generate_report(packets, flows, anomalies, stats, output_format='text'):
     # Text format
     lines = []
     lines.append("=" * 80)
-    lines.append("NETWORK TRAFFIC ANOMALY DETECTION REPORT")
+    lines.append("NETWORK ANOMALY DETECTION REPORT")
     lines.append("=" * 80)
     lines.append(f"Analysis Time: {report['analysis_timestamp']}")
     lines.append("")
     
     # Statistics
-    lines.append("TRAFFIC STATISTICS")
+    lines.append("📊 TRAFFIC STATISTICS")
     lines.append("-" * 80)
-    lines.append(f"Total Packets: {stats['total_packets']}")
-    lines.append(f"Total Flows: {stats['total_flows']}")
-    lines.append(f"Duration: {stats['duration']:.2f} seconds")
-    lines.append(f"Packet Rate: {stats['packets_per_second']:.2f} pkt/s")
-    lines.append(f"Avg Packet Size: {stats['avg_packet_size']:.2f} bytes")
-    lines.append(f"Median Packet Size: {stats['median_packet_size']:.2f} bytes")
+    lines.append(f"Total Packets:       {stats['total_packets']:,}")
+    lines.append(f"Total Flows:         {stats['total_flows']:,}")
+    lines.append(f"Capture Duration:    {stats['duration']:.2f} seconds")
+    lines.append(f"Packet Rate:         {stats['packets_per_second']:.2f} pkt/s")
+    lines.append(f"Avg Packet Size:     {stats['avg_packet_size']:.0f} bytes")
+    lines.append(f"95th Percentile:     {stats['p95_packet_size']:.0f} bytes")
     lines.append("")
     
     lines.append("Protocol Distribution:")
-    for proto, count in stats['protocol_distribution'].items():
+    for proto, count in sorted(stats['protocol_distribution'].items()):
         pct = (count / stats['total_packets']) * 100
-        lines.append(f"  {proto}: {count} ({pct:.1f}%)")
+        bar = "█" * int(pct / 2)
+        lines.append(f"  {proto:6s}: {count:6d} ({pct:5.1f}%) {bar}")
     lines.append("")
     
-    # Anomalies
-    lines.append("DETECTED ANOMALIES")
-    lines.append("-" * 80)
+    # Count total anomalies
+    total_anomalies = sum([
+        len(anomalies.get('port_scanning', [])),
+        len(anomalies.get('syn_floods', [])),
+        len(anomalies.get('data_exfiltration', [])),
+        len(anomalies.get('beaconing', [])),
+        len(anomalies.get('dns_tunneling', [])),
+        len(anomalies.get('icmp_tunneling', [])),
+        len(anomalies.get('slowloris', [])),
+        len(anomalies.get('fragmentation', [])),
+        len(anomalies.get('protocol_anomalies', []))
+    ])
     
-    # Size anomalies
-    if anomalies['size_anomalies']:
-        lines.append(f"\n[!] Packet Size Anomalies: {len(anomalies['size_anomalies'])} found")
-        lines.append(f"    Mean: {anomalies['size_mean']:.2f} bytes, Std: {anomalies['size_std']:.2f}")
-        for idx, size, z in anomalies['size_anomalies'][:10]:  # Show top 10
-            lines.append(f"    Packet #{idx}: {size} bytes (z-score: {z:.2f})")
-    
-    # Port scanning
-    if anomalies['port_scanning']:
-        lines.append(f"\n[!] Port Scanning Detected: {len(anomalies['port_scanning'])} sources")
-        for src, port_count in anomalies['port_scanning'][:5]:
-            lines.append(f"    {src} scanned {port_count} ports")
-    
-    # SYN floods
-    if anomalies['syn_floods']:
-        lines.append(f"\n[!] Potential SYN Floods: {len(anomalies['syn_floods'])} flows")
-        for flood in anomalies['syn_floods'][:5]:
-            lines.append(f"    {flood['flow']}: {flood['syn_count']} SYNs, {flood['ack_count']} ACKs")
-    
-    # Data exfiltration
-    if anomalies['data_exfiltration']:
-        lines.append(f"\n[!] Potential Data Exfiltration: {len(anomalies['data_exfiltration'])} flows")
-        for exfil in anomalies['data_exfiltration'][:5]:
-            lines.append(f"    {exfil['flow']}")
-            lines.append(f"      Total: {exfil['total_bytes']} bytes, Rate: {exfil['byte_rate']:.2f} B/s")
-    
-    # Beaconing
-    if anomalies['beaconing']:
-        lines.append(f"\n[!] Potential C2 Beaconing: {len(anomalies['beaconing'])} flows")
-        for beacon in anomalies['beaconing'][:5]:
-            lines.append(f"    {beacon['flow']}")
-            lines.append(f"      Interval: {beacon['mean_interval']:.3f}s, Regularity: {beacon['regularity_score']:.3f}")
-    
-    # Protocol anomalies
-    if anomalies['protocol_anomalies']:
-        lines.append(f"\n[!] Protocol Anomalies: {len(anomalies['protocol_anomalies'])} flows")
-        for proto_anom in anomalies['protocol_anomalies'][:5]:
-            lines.append(f"    {proto_anom['flow']}")
-            lines.append(f"      Expected {proto_anom['expected_proto']}, got {proto_anom['actual_proto']}")
+    if total_anomalies == 0:
+        lines.append("✅ NO SIGNIFICANT ANOMALIES DETECTED")
+        lines.append("")
+        lines.append("Traffic appears normal. All metrics within expected ranges.")
+    else:
+        lines.append(f"🚨 DETECTED ANOMALIES ({total_anomalies} total)")
+        lines.append("-" * 80)
+        
+        # Port scanning
+        if anomalies.get('port_scanning'):
+            lines.append(f"\n⚠️  PORT SCANNING: {len(anomalies['port_scanning'])} sources detected")
+            for scan in anomalies['port_scanning'][:5]:
+                lines.append(f"    └─ {scan['src_ip']}")
+                lines.append(f"       Ports scanned: {scan['port_count']}, Rate: {scan['scan_rate']:.1f} ports/s")
+        
+        # SYN floods
+        if anomalies.get('syn_floods'):
+            lines.append(f"\n🔴 SYN FLOOD: {len(anomalies['syn_floods'])} targets detected")
+            for flood in anomalies['syn_floods'][:5]:
+                lines.append(f"    └─ Target: {flood['target']}")
+                lines.append(f"       {flood['syn_count']} SYNs from {flood['unique_sources']} sources")
+        
+        # Data exfiltration
+        if anomalies.get('data_exfiltration'):
+            lines.append(f"\n🔴 POTENTIAL DATA EXFILTRATION: {len(anomalies['data_exfiltration'])} flows")
+            for exfil in sorted(anomalies['data_exfiltration'], key=lambda x: x['score'], reverse=True)[:5]:
+                lines.append(f"    └─ [{exfil['confidence']}] {exfil['flow']}")
+                lines.append(f"       Volume: {exfil['total_bytes']/1024/1024:.2f} MB, "
+                           f"Rate: {exfil['byte_rate']/1024:.1f} KB/s, "
+                           f"Duration: {exfil['duration']:.0f}s")
+                lines.append(f"       Indicators: {', '.join(exfil['reasons'])}")
+        
+        # Beaconing
+        if anomalies.get('beaconing'):
+            lines.append(f"\n⚠️  C2 BEACONING: {len(anomalies['beaconing'])} flows detected")
+            for beacon in anomalies['beaconing'][:5]:
+                lines.append(f"    └─ [{beacon['confidence']}] {beacon['flow']}")
+                lines.append(f"       Interval: {beacon['mean_interval']:.2f}s, "
+                           f"Regularity: {beacon['regularity_score']:.3f}")
+        
+        # DNS tunneling
+        if anomalies.get('dns_tunneling'):
+            lines.append(f"\n⚠️  DNS TUNNELING: {len(anomalies['dns_tunneling'])} suspicious flows")
+            for dns in anomalies['dns_tunneling'][:5]:
+                lines.append(f"    └─ {dns['flow']}")
+                lines.append(f"       Query rate: {dns['query_rate']:.1f} qps, "
+                           f"Total: {dns['total_queries']}")
+                
+        # ICMP tunneling
+        if anomalies.get('icmp_tunneling'):
+            lines.append(f"\n🔴 ICMP TUNNELING: {len(anomalies['icmp_tunneling'])} suspicious flows")
+            for icmp in anomalies['icmp_tunneling'][:5]:
+                lines.append(f"    └─ [{icmp['confidence']}] {icmp['flow']}")
+                lines.append(f"       Avg size: {icmp['avg_size']:.0f}B, "
+                           f"Total: {icmp['total_bytes']/1024:.1f}KB, "
+                           f"Packets: {icmp['packets']}")
+                lines.append(f"       Indicators: {', '.join(icmp['reasons'])}")
+        
+        # Slowloris attacks
+        if anomalies.get('slowloris'):
+            lines.append(f"\n⚠️  SLOWLORIS ATTACK: {len(anomalies['slowloris'])} targets")
+            for slow in anomalies['slowloris'][:5]:
+                lines.append(f"    └─ [{slow['confidence']}] Target: {slow['target']}")
+                lines.append(f"       Incomplete: {slow['incomplete_connections']}/{slow['total_connections']} "
+                           f"({slow['incomplete_ratio']*100:.1f}%), "
+                           f"Sources: {slow['unique_sources']}")
+        
+        # Fragmentation attacks
+        if anomalies.get('fragmentation'):
+            lines.append(f"\n⚠️  FRAGMENTATION ATTACK: {len(anomalies['fragmentation'])} targets")
+            for frag in anomalies['fragmentation'][:5]:
+                lines.append(f"    └─ [{frag['confidence']}] Target: {frag['target']}")
+                lines.append(f"       Fragments: {frag['fragment_count']}, "
+                           f"Sources: {frag['unique_sources']}")
+        
+        # Protocol anomalies
+        if anomalies.get('protocol_anomalies'):
+            lines.append(f"\n⚠️  PROTOCOL ANOMALIES: {len(anomalies['protocol_anomalies'])} flows")
+            for anom in anomalies['protocol_anomalies'][:3]:
+                lines.append(f"    └─ {anom['flow']}")
+                lines.append(f"       Expected {anom['expected_proto']}, got {anom['actual_proto']}")
     
     lines.append("\n" + "=" * 80)
     
     return "\n".join(lines)
 
-
-def is_private(ip):
-    return (
-        ip.startswith("10.") or
-        ip.startswith("192.168.") or
-        ip.startswith("172.16.") or ip.startswith("172.17.") or
-        ip.startswith("172.18.") or ip.startswith("172.19.") or
-        ip.startswith("172.20.") or ip.startswith("172.21.") or
-        ip.startswith("172.22.") or ip.startswith("172.23.") or
-        ip.startswith("172.24.") or ip.startswith("172.25.") or
-        ip.startswith("172.26.") or ip.startswith("172.27.") or
-        ip.startswith("172.28.") or ip.startswith("172.29.") or
-        ip.startswith("172.30.") or ip.startswith("172.31.")
-    )
-
 def main():
     if len(sys.argv) < 2:
-        print("Usage: python advanced_anomaly_detector.py <pcap> [options]")
+        print("Usage: python improved_anomaly_detector.py <pcap> [options]")
         print("\nOptions:")
         print("  --json              Output in JSON format")
         print("  --output <file>     Save report to file")
-        print("  --threshold <n>     Z-score threshold (default: 3.0)")
         print("  --whitelist <ips>   Comma-separated IPs to ignore")
+        print("  --sensitive         Use more sensitive detection (more false positives)")
         return
-    
-    known_destinations = {
-    "8.8.8.8",  # Google DNS
-    "13.35.0.0/16",  # AWS services
-    "40.112.0.0/16", # Azure services
-}
     
     pcap_path = sys.argv[1]
     output_format = 'text'
     output_file = None
-    threshold = 3.0
     whitelist_ips = set()
+    sensitive_mode = False
     
     # Parse arguments
     i = 2
@@ -547,15 +950,14 @@ def main():
         elif sys.argv[i] == '--output' and i + 1 < len(sys.argv):
             output_file = sys.argv[i + 1]
             i += 1
-        elif sys.argv[i] == '--threshold' and i + 1 < len(sys.argv):
-            threshold = float(sys.argv[i + 1])
-            i += 1
         elif sys.argv[i] == '--whitelist' and i + 1 < len(sys.argv):
             whitelist_ips = set(sys.argv[i + 1].split(','))
             i += 1
+        elif sys.argv[i] == '--sensitive':
+            sensitive_mode = True
         i += 1
     
-    print(f"[+] Parsing PCAP: {pcap_path}")
+    print(f"[+] Analyzing PCAP: {pcap_path}")
     packets, flows, errors = parse_pcap(pcap_path, whitelist_ips)
     
     if errors > 0:
@@ -565,14 +967,7 @@ def main():
         print("[!] No packets found in PCAP")
         return
     
-    
     print(f"[+] Loaded {len(packets)} packets in {len(flows)} flows")
-    
-    # Perform analysis
-    print("[+] Analyzing traffic...")
-    
-    sizes = [p['size'] for p in packets]
-    size_anomalies, size_mean, size_std = detect_size_anomalies(sizes, threshold)
     
     # Build internal IP list after parsing PCAP
     ip_counter = Counter()
@@ -582,23 +977,111 @@ def main():
 
     internal_ips = set(ip for ip in ip_counter if is_private(ip))
 
+
+def main():
+    if len(sys.argv) < 2:
+        print("Usage: python improved_anomaly_detector.py <pcap> [options]")
+        print("\nOptions:")
+        print("  --json              Output in JSON format")
+        print("  --output <file>     Save report to file")
+        print("  --whitelist <ips>   Comma-separated IPs to ignore")
+        print("  --sensitive         Use more sensitive detection (more false positives)")
+        return
     
-    port_scanning = detect_port_scanning(flows)
-    syn_floods = detect_syn_flood(flows)
-    data_exfil = detect_data_exfiltration(flows, internal_ips)
-    beaconing = detect_beaconing(flows)
+    pcap_path = sys.argv[1]
+    output_format = 'text'
+    output_file = None
+    whitelist_ips = set()
+    sensitive_mode = False
+    
+    # Parse arguments
+    i = 2
+    while i < len(sys.argv):
+        if sys.argv[i] == '--json':
+            output_format = 'json'
+        elif sys.argv[i] == '--output' and i + 1 < len(sys.argv):
+            output_file = sys.argv[i + 1]
+            i += 1
+        elif sys.argv[i] == '--whitelist' and i + 1 < len(sys.argv):
+            whitelist_ips = set(sys.argv[i + 1].split(','))
+            i += 1
+        elif sys.argv[i] == '--sensitive':
+            sensitive_mode = True
+        i += 1
+    
+    print(f"[+] Analyzing PCAP: {pcap_path}")
+    packets, flows, errors = parse_pcap(pcap_path, whitelist_ips)
+    
+    if errors > 0:
+        print(f"[!] Skipped {errors} malformed packets")
+    
+    if not packets:
+        print("[!] No packets found in PCAP")
+        return
+    
+    print(f"[+] Loaded {len(packets)} packets in {len(flows)} flows")
+    
+    # Build internal IP list
+    ip_counter = Counter()
+    for flow in flows.values():
+        ip_counter[flow.key.src_ip] += 1
+        ip_counter[flow.key.dst_ip] += 1
+    
+    internal_ips = set(ip for ip in ip_counter if is_private_ip(ip))
+    print(f"[+] Identified {len(internal_ips)} internal IP addresses")
+    
+    # Calculate baseline statistics
+    print("[+] Calculating baseline statistics...")
+    baseline = calculate_baseline(flows)
+    if '--debug' in sys.argv:
+        debug_flows(flows, internal_ips)
+    
+    # Perform anomaly detection
+    print("[+] Running anomaly detection...")
+    
+    # Adjust thresholds based on mode
+    if sensitive_mode:
+        size_threshold = 2.5
+        port_scan_threshold = 8
+        syn_threshold = 30
+        cv_threshold = 0.3
+        min_beacon_packets = 8
+    else:
+        size_threshold = 3.0  # More lenient
+        port_scan_threshold = 12  # Lower threshold
+        syn_threshold = 40
+        cv_threshold = 0.25  # More lenient
+        min_beacon_packets = 10
+    
+    sizes = [p['size'] for p in packets]
+    size_anomalies, size_median, size_mad = detect_size_anomalies(sizes, size_threshold)
+    
+    port_scanning = detect_port_scanning(flows, threshold=port_scan_threshold)
+    syn_floods = detect_syn_flood(flows, syn_threshold=syn_threshold)
+    data_exfil = detect_data_exfiltration(flows, internal_ips, baseline)
+    beaconing = detect_beaconing(flows, min_packets=min_beacon_packets, cv_threshold=cv_threshold)
+    dns_tunneling = detect_dns_tunneling(flows)
+    icmp_tunneling = detect_icmp_tunneling(flows)
+    slowloris = detect_slowloris(flows)
+    fragmentation = detect_fragmentation_attack(flows)
     proto_anomalies = detect_protocol_anomalies(flows)
     
+    # Generate statistics
     stats = analyze_traffic_statistics(packets, flows)
     
+    # Compile anomalies
     anomalies = {
         'size_anomalies': size_anomalies,
-        'size_mean': size_mean,
-        'size_std': size_std,
+        'size_median': size_median,
+        'size_mad': size_mad,
         'port_scanning': port_scanning,
         'syn_floods': syn_floods,
         'data_exfiltration': data_exfil,
         'beaconing': beaconing,
+        'dns_tunneling': dns_tunneling,
+        'icmp_tunneling': icmp_tunneling,
+        'slowloris': slowloris,
+        'fragmentation': fragmentation,
         'protocol_anomalies': proto_anomalies
     }
     
@@ -613,4 +1096,4 @@ def main():
         print(report)
 
 if __name__ == "__main__":
-    main()    
+    main()
