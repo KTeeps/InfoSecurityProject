@@ -6,6 +6,7 @@ Uses context-aware detection, adaptive thresholds, and behavioral baselines
 
 import dpkt
 import socket
+import ipaddress
 import numpy as np
 import json
 from collections import defaultdict, Counter
@@ -47,16 +48,29 @@ class Flow:
         self.ack_count = 0
         self.fin_count = 0
         self.rst_count = 0
+        self.outbound_bytes = 0
+        self.inbound_bytes = 0
     
     def add_packet(self, ts, size, flags=None):
         if self.start_time is None:
             self.start_time = ts
         self.end_time = ts
+
         self.packets.append((ts, size, flags))
         self.sizes.append(size)
         self.timestamps.append(ts)
         self.tcp_flags.append(flags)
         self.total_bytes += size
+
+        # NEW — direction-based tracking
+        try:
+            if self.current_src == self.key.src_ip:
+                self.outbound_bytes += size
+            else:
+                self.inbound_bytes += size
+        except AttributeError:
+            # This shouldn't happen if parse_pcap sets current_src correctly
+            pass
         
         # Count TCP flags
         if flags is not None:
@@ -198,11 +212,19 @@ def parse_pcap(path, whitelist_ips=None):
                 
                 # Create flow key
                 flow_key = FlowKey(src_ip, dst_ip, src_port, dst_port, proto_name)
-                
-                # Add to flow
+
+                # Ensure flow exists
                 if flow_key not in flows:
                     flows[flow_key] = Flow(flow_key)
-                flows[flow_key].add_packet(ts, size, tcp_flags)
+
+                flow_obj = flows[flow_key]
+
+                # NEW: set direction info for this packet
+                flow_obj.current_src = src_ip
+                flow_obj.current_dst = dst_ip
+                
+                # Add packet with timestamp, size, flags
+                flow_obj.add_packet(ts, size, tcp_flags)
                 
                 # Store individual packet
                 packets.append({
@@ -345,97 +367,106 @@ def detect_syn_flood(flows, syn_threshold=50):
     return syn_floods
 
 def detect_data_exfiltration(flows, internal_ips, baseline):
-    """
-    Improved exfiltration detection with adjusted thresholds
-    """
     exfil_candidates = []
-    
-    # Much more aggressive thresholds
-    size_threshold = max(baseline.get('size_p95', 1500) * 1.5, 150000)  # 150KB minimum
-    rate_threshold = max(baseline.get('rate_p95', 50000) * 1.2, 30000)  # 30KB/s minimum
-    
+
+    # More realistic thresholds
+    size_threshold = max(baseline.get('size_p95', 80000) * 1.2, 50000)  # 50 KB minimum
+    rate_threshold = max(baseline.get('rate_p95', 20000) * 1.2, 12000)  # ~12 KB/s
+
     for flow_key, flow in flows.items():
-        # Skip non-TCP/UDP
+
+        # Only consider TCP/UDP
         if flow.key.proto not in ["TCP", "UDP"]:
             continue
-        
-        # Only outbound from internal network
-        if flow.key.src_ip not in internal_ips or flow.key.dst_ip in internal_ips:
+
+        # Determine inbound ↔ outbound classification
+        src_internal = (
+            flow.key.src_ip in internal_ips or
+            is_private_ip(flow.key.src_ip)
+        )
+        dst_internal = (
+            flow.key.dst_ip in internal_ips or
+            is_private_ip(flow.key.dst_ip)
+        )
+
+        # Only outbound flows from internal → external
+        if not src_internal or dst_internal:
             continue
-        
-        # Skip known legitimate services
-        if is_known_service(flow.key.dst_ip, flow.key.dst_port):
-            continue
-        
-        # Very low minimum packet count
-        if len(flow.packets) < 10:
-            continue
-        
+
         duration = flow.get_duration()
-        if duration < 0.2:
+        if duration <= 0:
             continue
-        
-        # Scoring system
+
+        total_bytes = flow.total_bytes
+        out_bytes = flow.outbound_bytes
+        in_bytes = flow.inbound_bytes
+        byte_rate = flow.get_byte_rate()
+        packet_count = len(flow.packets)
+        avg_packet = np.mean(flow.sizes)
+
+        print("\n[DEBUG] Checking flow:", flow_key)
+        print("  src:", flow.key.src_ip, "dst:", flow.key.dst_ip, "port:", flow.key.dst_port)
+        print("  total_bytes:", flow.total_bytes)
+        print("  out_bytes:", flow.outbound_bytes, "in_bytes:", flow.inbound_bytes)
+        print("  duration:", flow.get_duration())
+        print("  packets:", len(flow.packets))
+        print("  avg_packet:", np.mean(flow.sizes))
+        print("  internal_src?", (flow.key.src_ip in internal_ips or is_private_ip(flow.key.src_ip)))
+        print("  internal_dst?", (flow.key.dst_ip in internal_ips or is_private_ip(flow.key.dst_ip)))
+
+
+        # ----- SCORING -----
         score = 0
         reasons = []
-        
-        # 1. Large total transfer
-        if flow.total_bytes > size_threshold:
-            score += 4
-            reasons.append(f"large_volume_{flow.total_bytes/1024/1024:.2f}MB")
-        elif flow.total_bytes > 100000:  # Even lower medium threshold
+
+        # 1. Large outbound data
+        if out_bytes > size_threshold:
             score += 3
-            reasons.append(f"medium_volume_{flow.total_bytes/1024/1024:.2f}MB")
-        
-        # 2. High sustained rate
-        byte_rate = flow.get_byte_rate()
+            reasons.append(f"large_outbound_{out_bytes/1024:.1f}KB")
+        elif out_bytes > 30000:
+            score += 2
+            reasons.append(f"medium_outbound_{out_bytes/1024:.1f}KB")
+
+        # 2. Strong asymmetry (exfil is usually one-way)
+        if in_bytes == 0 or out_bytes / max(in_bytes, 1) > 20:
+            score += 3
+            reasons.append("asymmetric_flow")
+
+        # 3. High data rate
         if byte_rate > rate_threshold:
-            score += 4
+            score += 3
             reasons.append(f"high_rate_{byte_rate/1024:.1f}KB/s")
-        elif byte_rate > 20000:  # Lower medium rate
+
+        # 4. Unusual destination port
+        common_ports = {80, 443, 53, 22, 25, 110, 143, 587, 993, 995}
+        if flow.key.dst_port not in common_ports and out_bytes > 20000:
             score += 2
-            reasons.append(f"medium_rate_{byte_rate/1024:.1f}KB/s")
-        
-        # 3. Sustained activity
-        packet_rate = flow.get_packet_rate()
-        if duration > 10 and packet_rate > 0.3:
-            score += 2
-            reasons.append(f"sustained_{duration:.0f}s_{packet_rate:.1f}pps")
-        
-        # 4. Unusual destination port - more aggressive
-        common_ports = {80, 443, 53, 22, 25, 587, 993, 995, 8080, 8443}
-        if flow.key.dst_port not in common_ports and flow.total_bytes > 100000:
-            score += 3  # Increased from 2
             reasons.append(f"unusual_port_{flow.key.dst_port}")
-        
-        # 5. Large average packet size
-        avg_packet_size = np.mean(flow.sizes)
-        if avg_packet_size > 600:  # Lowered from 700
-            score += 2
-            reasons.append(f"large_packets_{avg_packet_size:.0f}B")
-        
-        # 6. Many large packets
-        large_packets = sum(1 for s in flow.sizes if s > 2500)  # Lowered from 3000
-        if large_packets > 8:  # Lowered from 10
-            score += 2
-            reasons.append(f"{large_packets}_jumbo_packets")
-        
-        # Very lenient threshold
-        if score >= 4:  # Lowered from 5
+
+        # 5. Large packet sizes
+        if avg_packet > 700:
+            score += 1
+            reasons.append(f"large_packets_{avg_packet:.0f}B")
+
+        # 6. Minimum packets to be meaningful
+        if packet_count >= 4:
+            score += 1
+
+        # ---- FINAL DECISION ----
+        if score >= 4:
             exfil_candidates.append({
-                'flow': str(flow_key),
-                'total_bytes': flow.total_bytes,
+                'flow': str(flow.key),
+                'total_bytes': total_bytes,
                 'byte_rate': byte_rate,
                 'duration': duration,
-                'packets': len(flow.packets),
-                'avg_packet_size': avg_packet_size,
+                'packets': packet_count,
+                'avg_packet_size': avg_packet,
                 'score': score,
                 'reasons': reasons,
-                'confidence': 'HIGH' if score >= 8 else 'MEDIUM'
+                'confidence': 'HIGH' if score >= 7 else 'MEDIUM'
             })
-    
-    return exfil_candidates
 
+    return exfil_candidates
 
 def detect_beaconing(flows, min_packets=10, cv_threshold=0.25):
     """
@@ -485,41 +516,92 @@ def detect_beaconing(flows, min_packets=10, cv_threshold=0.25):
 
 def detect_dns_tunneling(flows):
     """
-    Improved DNS tunneling detection - very aggressive
+    Detect DNS tunneling by aggregating many DNS flows from the same host.
+    Looks for:
+      - High number of DNS queries
+      - Large DNS query sizes
+      - High query rate
     """
-    dns_anomalies = []
-    
+
+    dns_stats = defaultdict(lambda: {
+        "count": 0,
+        "total_size": 0,
+        "max_size": 0,
+        "timestamps": []
+    })
+
+    # ---- Aggregate DNS traffic ----
     for flow_key, flow in flows.items():
-        # Focus on DNS traffic
-        if flow.key.dst_port != 53 or flow.key.proto != "UDP":
+
+        # Only DNS
+        if flow.key.proto != "UDP" or flow.key.dst_port != 53:
             continue
-        
-        # Check for high query volume
-        duration = flow.get_duration()
-        if duration > 0:
-            query_rate = len(flow.packets) / duration
-            
-            # Much lower thresholds for detection
-            if query_rate > 2 and len(flow.packets) > 20:  # Was 3 qps and 25 packets
-                dns_anomalies.append({
-                    'flow': str(flow_key),
-                    'query_rate': query_rate,
-                    'total_queries': len(flow.packets),
-                    'duration': duration,
-                    'type': 'high_volume',
-                    'confidence': 'HIGH' if query_rate > 5 else 'MEDIUM'
-                })
-        elif len(flow.packets) > 30:  # Fallback: just high packet count
-            dns_anomalies.append({
-                'flow': str(flow_key),
-                'query_rate': 0,
-                'total_queries': len(flow.packets),
-                'duration': 0,
-                'type': 'high_volume',
-                'confidence': 'MEDIUM'
+
+        src = flow.key.src_ip
+        dst = flow.key.dst_ip
+
+        dns_stats[(src, dst)]["count"] += 1
+        dns_stats[(src, dst)]["total_size"] += flow.total_bytes
+        dns_stats[(src, dst)]["max_size"] = max(
+            dns_stats[(src, dst)]["max_size"],
+            np.mean(flow.sizes) if flow.sizes else 0
+        )
+
+        if flow.timestamps:
+            dns_stats[(src, dst)]["timestamps"].append(flow.timestamps[0])
+
+    anomalies = []
+
+    # ---- Evaluate aggregated behavior ----
+    for (src, dst), stats in dns_stats.items():
+        count = stats["count"]
+        avg_size = stats["total_size"] / count
+        max_size = stats["max_size"]
+        timestamps = sorted(stats["timestamps"])
+
+        # Compute QPS
+        if len(timestamps) >= 2:
+            duration = timestamps[-1] - timestamps[0]
+            qps = count / duration if duration > 0 else 0
+        else:
+            duration = 0
+            qps = 0
+
+        score = 0
+        reasons = []
+
+        # High number of DNS flows
+        if count >= 30:
+            score += 3
+            reasons.append(f"high_flow_count_{count}")
+
+        # Large DNS packets (encoded subdomains)
+        if max_size >= 110:
+            score += 2
+            reasons.append(f"large_dns_{max_size:.0f}B")
+
+        # High DNS rate
+        if qps >= 2:
+            score += 1
+            reasons.append(f"high_qps_{qps:.1f}")
+
+        # If suspicious enough
+        if score >= 3:
+            anomalies.append({
+                "flow": f"{src} -> {dst} (DNS aggregated)",
+                "dns_flows": count,
+                "total_queries": count,  # required by report
+                "avg_size": avg_size,
+                "max_size": max_size,
+                "qps": qps,
+                "query_rate": qps,       # required by report
+                "duration": duration,
+                "score": score,
+                "reasons": reasons,
+                "confidence": "HIGH" if score >= 6 else "MEDIUM"
             })
-    
-    return dns_anomalies
+
+    return anomalies
 
 def detect_icmp_tunneling(flows):
     """
@@ -974,9 +1056,7 @@ def main():
     for flow in flows.values():
         ip_counter[flow.key.src_ip] += 1
         ip_counter[flow.key.dst_ip] += 1
-
-    internal_ips = set(ip for ip in ip_counter if is_private(ip))
-
+    internal_ips = set(ip for ip in ip_counter if is_private_ip(ip))
 
 def main():
     if len(sys.argv) < 2:
