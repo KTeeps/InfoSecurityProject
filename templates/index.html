@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Anomaly Detector</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body class="dark">
+    <div class="topbar">
+        <h1>🔍 Network Anomaly Detector</h1>
+        <nav>
+            <a href="/">Upload</a>
+            <a href="/history">History</a>
+        </nav>
+    </div>
+
+    <div class="container">
+        <div class="card small" style="margin: 40px auto;">
+            <h2 style="margin-top: 0;">Upload PCAP File</h2>
+            <p class="muted">Upload a network capture file for analysis. Supports .pcap, .pcapng, and .cap formats.</p>
+            
+            <form action="/upload" method="POST" enctype="multipart/form-data" id="uploadForm">
+                <div style="margin: 20px 0;">
+                    <input type="file" name="pcap" id="pcapFile" accept=".pcap,.pcapng,.cap" required>
+                </div>
+                
+                <div id="uploadStatus" style="margin: 15px 0; display: none;">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <p class="muted" id="statusText">Uploading and analyzing...</p>
+                </div>
+                
+                <button type="submit" class="btn primary">Analyze PCAP</button>
+            </form>
+        </div>
+
+        <div class="card" style="max-width: 800px; margin: 20px auto;">
+            <h3>Detected Anomalies</h3>
+            <p class="muted">This tool detects the following network anomalies:</p>
+            <ul class="feature-list">
+                <li><strong>Port Scanning:</strong> Detects reconnaissance activity by identifying sources scanning multiple ports</li>
+                <li><strong>SYN Flood:</strong> Identifies potential denial-of-service attacks using SYN packets</li>
+                <li><strong>Data Exfiltration:</strong> Detects unusual outbound data transfers that may indicate data theft</li>
+                <li><strong>C2 Beaconing:</strong> Identifies regular periodic communication patterns typical of malware</li>
+                <li><strong>DNS Tunneling:</strong> Detects data exfiltration through DNS queries</li>
+                <li><strong>ICMP Tunneling:</strong> Identifies covert channels using ICMP packets</li>
+                <li><strong>Slowloris Attacks:</strong> Detects slow HTTP DoS attacks</li>
+                <li><strong>Fragmentation Attacks:</strong> Identifies IP fragmentation-based attacks</li>
+                <li><strong>Protocol Anomalies:</strong> Detects protocol misuse on standard ports</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('uploadForm');
+        const statusDiv = document.getElementById('uploadStatus');
+        const statusText = document.getElementById('statusText');
+        
+        form.addEventListener('submit', function(e) {
+            statusDiv.style.display = 'block';
+            statusText.textContent = 'Uploading and analyzing PCAP file... This may take a moment.';
+        });
+    </script>
+</body>
+</html>

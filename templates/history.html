@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analysis History - Network Anomaly Detector</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body class="dark">
+    <div class="topbar">
+        <h1>🔍 Network Anomaly Detector</h1>
+        <nav>
+            <a href="/">Upload</a>
+            <a href="/history">History</a>
+        </nav>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <h2 style="margin-top: 0;">Analysis History</h2>
+            <p class="muted">View and download previous PCAP analysis results</p>
+        </div>
+
+        {% if files %}
+        <div class="history-list">
+            {% for file in files %}
+            <div class="card history-item">
+                <div class="history-info">
+                    <h3>{{ file.name }}</h3>
+                    <p class="muted">{{ file.timestamp }}</p>
+                </div>
+                <div class="history-actions">
+                    <a href="{{ url_for('results', resfile=file.name) }}" class="btn">View Results</a>
+                    <a href="{{ url_for('download_json', resfile=file.name) }}" class="btn">Download JSON</a>
+                    <a href="{{ url_for('download_pdf', resfile=file.name) }}" class="btn">Download PDF</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="card">
+            <p class="muted" style="text-align: center; padding: 40px 0;">
+                No analysis history found. <a href="/">Upload a PCAP file</a> to get started.
+            </p>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>

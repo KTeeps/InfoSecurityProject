@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analysis Results - Network Anomaly Detector</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+</head>
+<body class="dark">
+    <div class="topbar">
+        <h1>🔍 Network Anomaly Detector</h1>
+        <nav>
+            <a href="/">Upload</a>
+            <a href="/history">History</a>
+        </nav>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <h2 style="margin-top: 0;">Analysis Results</h2>
+            <p class="muted">{{ resfile }}</p>
+            
+            <div class="actions">
+                <a href="{{ url_for('download_json', resfile=resfile) }}" class="btn">📄 Download JSON</a>
+                <a href="{{ url_for('download_pdf', resfile=resfile) }}" class="btn">📑 Download PDF</a>
+                <a href="/" class="btn">🔄 Analyze Another</a>
+            </div>
+        </div>
+
+        <div class="grid-3">
+            <div class="card stat">
+                <h3>{{ results.packets }}</h3>
+                <p class="muted">Total Packets</p>
+            </div>
+            <div class="card stat">
+                <h3>{{ results.flows }}</h3>
+                <p class="muted">Network Flows</p>
+            </div>
+            <div class="card stat">
+                <h3>{{ results.internal_ips }}</h3>
+                <p class="muted">Internal IPs</p>
+            </div>
+        </div>
+
+        {% set stats = results.stats %}
+        {% if stats %}
+        <div class="card">
+            <h3>Traffic Statistics</h3>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <span class="stat-label">Duration:</span>
+                    <span class="stat-value">{{ "%.2f"|format(stats.duration) }}s</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Packet Rate:</span>
+                    <span class="stat-value">{{ "%.2f"|format(stats.packets_per_second) }} pkt/s</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Avg Packet Size:</span>
+                    <span class="stat-value">{{ "%.0f"|format(stats.avg_packet_size) }} bytes</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Median Packet Size:</span>
+                    <span class="stat-value">{{ "%.0f"|format(stats.median_packet_size) }} bytes</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">95th Percentile:</span>
+                    <span class="stat-value">{{ "%.0f"|format(stats.p95_packet_size) }} bytes</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Avg Flow Duration:</span>
+                    <span class="stat-value">{{ "%.2f"|format(stats.avg_flow_duration) }}s</span>
+                </div>
+            </div>
+        </div>
+
+        {% if stats.protocol_distribution %}
+        <div class="grid-2">
+            <div class="card">
+                <h4>Protocol Distribution</h4>
+                <canvas id="protocolPieChart" width="300" height="300"></canvas>
+            </div>
+            <div class="card">
+                <h4>Traffic Over Time</h4>
+                <canvas id="trafficChart" width="400" height="300"></canvas>
+            </div>
+        </div>
+        {% endif %}
+        {% endif %}
+
+        {% set anomalies = results.anomalies %}
+        {% set total_anomalies = (anomalies.port_scanning|length) + (anomalies.syn_floods|length) + (anomalies.data_exfiltration|length) + (anomalies.beaconing|length) + (anomalies.dns_tunneling|length) + (anomalies.icmp_tunneling|length) + (anomalies.slowloris|length) + (anomalies.fragmentation|length) + (anomalies.protocol_anomalies|length) %}
+
+        <div class="card">
+            <h3>Anomaly Summary</h3>
+            {% if total_anomalies == 0 %}
+            <div class="alert alert-success">
+                <strong>✅ No Significant Anomalies Detected</strong>
+                <p>Traffic appears normal. All metrics are within expected ranges.</p>
+            </div>
+            {% else %}
+            <div class="alert alert-warning">
+                <strong>⚠️ {{ total_anomalies }} Anomalies Detected</strong>
+                <p>Review the details below for potential security issues.</p>
+            </div>
+            {% endif %}
+        </div>
+
+        {% if anomalies.port_scanning %}
+        <div class="card">
+            <h3>⚠️ Port Scanning ({{ anomalies.port_scanning|length }})</h3>
+            <p class="muted">Sources performing port reconnaissance</p>
+            <div id="port_scanning_container">
+                {% for scan in anomalies.port_scanning[:5] %}
+                <div class="anomaly-item">
+                    <div class="anomaly-header">
+                        <span class="badge danger">HIGH</span>
+                        <code>{{ scan.src_ip }}</code>
+                    </div>
+                    <div class="anomaly-details">
+                        <span>Ports scanned: <strong>{{ scan.port_count }}</strong></span>
+                        <span>Scan rate: <strong>{{ "%.1f"|format(scan.scan_rate) }}</strong> ports/s</span>
+                        <span>Duration: <strong>{{ "%.2f"|format(scan.duration) }}</strong>s</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% if anomalies.port_scanning|length > 5 %}
+            <button class="btn expand-btn" onclick="expandSection('port_scanning', {{ anomalies.port_scanning|tojson }})">
+                Show all {{ anomalies.port_scanning|length }} port scans
+            </button>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% if anomalies.syn_floods %}
+        <div class="card">
+            <h3>🔴 SYN Flood Attacks ({{ anomalies.syn_floods|length }})</h3>
+            <p class="muted">Targets under potential DoS attack</p>
+            {% for flood in anomalies.syn_floods[:10] %}
+            <div class="anomaly-item">
+                <div class="anomaly-header">
+                    <span class="badge danger">CRITICAL</span>
+                    <code>{{ flood.target }}</code>
+                </div>
+                <div class="anomaly-details">
+                    <span>SYN count: <strong>{{ flood.syn_count }}</strong></span>
+                    <span>Unique sources: <strong>{{ flood.unique_sources }}</strong></span>
+                    <span>Avg rate: <strong>{{ "%.1f"|format(flood.avg_rate) }}</strong> SYN/s</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if anomalies.data_exfiltration %}
+        <div class="card">
+            <h3>🔴 Potential Data Exfiltration ({{ anomalies.data_exfiltration|length }})</h3>
+            <p class="muted">Suspicious outbound data transfers</p>
+            <div id="data_exfiltration_container">
+                {% for exfil in anomalies.data_exfiltration[:5] %}
+                <div class="anomaly-item">
+                    <div class="anomaly-header">
+                        <span class="badge {% if exfil.confidence == 'HIGH' %}danger{% else %}warn{% endif %}">{{ exfil.confidence }}</span>
+                        <code>{{ exfil.flow }}</code>
+                    </div>
+                    <div class="anomaly-details">
+                        <span>Volume: <strong>{{ "%.2f"|format(exfil.total_bytes / 1024 / 1024) }}</strong> MB</span>
+                        <span>Rate: <strong>{{ "%.1f"|format(exfil.byte_rate / 1024) }}</strong> KB/s</span>
+                        <span>Duration: <strong>{{ "%.0f"|format(exfil.duration) }}</strong>s</span>
+                        <span>Packets: <strong>{{ exfil.packets }}</strong></span>
+                    </div>
+                    <div class="anomaly-reasons">
+                        <strong>Indicators:</strong> {{ exfil.reasons|join(', ') }}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% if anomalies.data_exfiltration|length > 5 %}
+            <button class="btn expand-btn" onclick="expandSection('data_exfiltration', {{ anomalies.data_exfiltration|tojson }})">
+                Show all {{ anomalies.data_exfiltration|length }} suspicious flows
+            </button>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% if anomalies.beaconing %}
+        <div class="card">
+            <h3>⚠️ C2 Beaconing ({{ anomalies.beaconing|length }})</h3>
+            <p class="muted">Regular periodic communication patterns</p>
+            <div id="beaconing_container">
+                {% for beacon in anomalies.beaconing[:5] %}
+                <div class="anomaly-item">
+                    <div class="anomaly-header">
+                        <span class="badge {% if beacon.confidence == 'HIGH' %}danger{% else %}warn{% endif %}">{{ beacon.confidence }}</span>
+                        <code>{{ beacon.flow }}</code>
+                    </div>
+                    <div class="anomaly-details">
+                        <span>Packets: <strong>{{ beacon.packets }}</strong></span>
+                        <span>Interval: <strong>{{ "%.2f"|format(beacon.mean_interval) }}</strong>s</span>
+                        <span>Regularity: <strong>{{ "%.3f"|format(beacon.regularity_score) }}</strong></span>
+                        <span>Duration: <strong>{{ "%.0f"|format(beacon.duration) }}</strong>s</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% if anomalies.beaconing|length > 5 %}
+            <button class="btn expand-btn" onclick="expandSection('beaconing', {{ anomalies.beaconing|tojson }})">
+                Show all {{ anomalies.beaconing|length }} beaconing flows
+            </button>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% if anomalies.dns_tunneling %}
+        <div class="card">
+            <h3>⚠️ DNS Tunneling ({{ anomalies.dns_tunneling|length }})</h3>
+            <p class="muted">Suspicious DNS query patterns</p>
+            <div id="dns_tunneling_container">
+                {% for dns in anomalies.dns_tunneling[:5] %}
+                <div class="anomaly-item">
+                    <div class="anomaly-header">
+                        <span class="badge {% if dns.confidence == 'HIGH' %}danger{% else %}warn{% endif %}">{{ dns.confidence }}</span>
+                        <code>{{ dns.flow }}</code>
+                    </div>
+                    <div class="anomaly-details">
+                        <span>Query rate: <strong>{{ "%.1f"|format(dns.query_rate) }}</strong> qps</span>
+                        <span>Total queries: <strong>{{ dns.total_queries }}</strong></span>
+                        <span>Max size: <strong>{{ "%.0f"|format(dns.max_size) }}</strong>B</span>
+                        <span>Avg size: <strong>{{ "%.0f"|format(dns.avg_size) }}</strong>B</span>
+                    </div>
+                    <div class="anomaly-reasons">
+                        <strong>Indicators:</strong> {{ dns.reasons|join(', ') }}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% if anomalies.dns_tunneling|length > 5 %}
+            <button class="btn expand-btn" onclick="expandSection('dns_tunneling', {{ anomalies.dns_tunneling|tojson }})">
+                Show all {{ anomalies.dns_tunneling|length }} DNS anomalies
+            </button>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% if anomalies.icmp_tunneling %}
+        <div class="card">
+            <h3>🔴 ICMP Tunneling ({{ anomalies.icmp_tunneling|length }})</h3>
+            <p class="muted">Covert channels using ICMP</p>
+            {% for icmp in anomalies.icmp_tunneling[:10] %}
+            <div class="anomaly-item">
+                <div class="anomaly-header">
+                    <span class="badge {% if icmp.confidence == 'HIGH' %}danger{% else %}warn{% endif %}">{{ icmp.confidence }}</span>
+                    <code>{{ icmp.flow }}</code>
+                </div>
+                <div class="anomaly-details">
+                    <span>Avg size: <strong>{{ "%.0f"|format(icmp.avg_size) }}</strong>B</span>
+                    <span>Total: <strong>{{ "%.1f"|format(icmp.total_bytes / 1024) }}</strong>KB</span>
+                    <span>Packets: <strong>{{ icmp.packets }}</strong></span>
+                    <span>Duration: <strong>{{ "%.0f"|format(icmp.duration) }}</strong>s</span>
+                </div>
+                <div class="anomaly-reasons">
+                    <strong>Indicators:</strong> {{ icmp.reasons|join(', ') }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if anomalies.slowloris %}
+        <div class="card">
+            <h3>⚠️ Slowloris Attacks ({{ anomalies.slowloris|length }})</h3>
+            <p class="muted">Slow HTTP DoS attacks</p>
+            {% for slow in anomalies.slowloris[:10] %}
+            <div class="anomaly-item">
+                <div class="anomaly-header">
+                    <span class="badge {% if slow.confidence == 'HIGH' %}danger{% else %}warn{% endif %}">{{ slow.confidence }}</span>
+                    <code>{{ slow.target }}</code>
+                </div>
+                <div class="anomaly-details">
+                    <span>Incomplete connections: <strong>{{ slow.incomplete_connections }}/{{ slow.total_connections }}</strong></span>
+                    <span>Ratio: <strong>{{ "%.1f"|format(slow.incomplete_ratio * 100) }}%</strong></span>
+                    <span>Unique sources: <strong>{{ slow.unique_sources }}</strong></span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if anomalies.fragmentation %}
+        <div class="card">
+            <h3>⚠️ Fragmentation Attacks ({{ anomalies.fragmentation|length }})</h3>
+            <p class="muted">IP fragmentation-based attacks</p>
+            {% for frag in anomalies.fragmentation[:10] %}
+            <div class="anomaly-item">
+                <div class="anomaly-header">
+                    <span class="badge warn">{{ frag.confidence }}</span>
+                    <code>{{ frag.target }}</code>
+                </div>
+                <div class="anomaly-details">
+                    <span>Fragments: <strong>{{ frag.fragment_count }}</strong></span>
+                    <span>Unique sources: <strong>{{ frag.unique_sources }}</strong></span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if anomalies.protocol_anomalies %}
+        <div class="card">
+            <h3>⚠️ Protocol Anomalies ({{ anomalies.protocol_anomalies|length }})</h3>
+            <p class="muted">Protocol mismatches on standard ports</p>
+            {% for anom in anomalies.protocol_anomalies[:10] %}
+            <div class="anomaly-item">
+                <div class="anomaly-header">
+                    <span class="badge warn">MEDIUM</span>
+                    <code>{{ anom.flow }}</code>
+                </div>
+                <div class="anomaly-details">
+                    <span>Expected: <strong>{{ anom.expected_proto }}</strong></span>
+                    <span>Actual: <strong>{{ anom.actual_proto }}</strong></span>
+                    <span>Packets: <strong>{{ anom.packets }}</strong></span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+
+    <script>
+        // Protocol Distribution Pie Chart
+        {% if stats and stats.protocol_distribution %}
+        const protocolCtx = document.getElementById('protocolPieChart');
+        if (protocolCtx) {
+            const protocolData = {{ stats.protocol_distribution|tojson }};
+            new Chart(protocolCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(protocolData),
+                    datasets: [{
+                        data: Object.values(protocolData),
+                        backgroundColor: [
+                            'rgba(29, 233, 182, 0.8)',
+                            'rgba(124, 58, 237, 0.8)',
+                            'rgba(255, 107, 107, 0.8)',
+                            'rgba(255, 184, 107, 0.8)',
+                            'rgba(81, 207, 102, 0.8)',
+                            'rgba(74, 144, 226, 0.8)'
+                        ],
+                        borderColor: 'rgba(255, 255, 255, 0.1)',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: '#9aa6b2',
+                                padding: 15,
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(7, 16, 24, 0.95)',
+                            titleColor: '#e6eef6',
+                            bodyColor: '#9aa6b2',
+                            borderColor: 'rgba(255, 255, 255, 0.1)',
+                            borderWidth: 1,
+                            padding: 12,
+                            displayColors: true,
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed || 0;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return `${label}: ${value} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Traffic Over Time Chart (simulated data based on stats)
+        const trafficCtx = document.getElementById('trafficChart');
+        if (trafficCtx) {
+            const duration = {{ stats.duration }};
+            const totalPackets = {{ results.packets }};
+            const intervals = 20;
+            const timeStep = duration / intervals;
+            
+            // Generate simulated timeline data
+            const labels = [];
+            const data = [];
+            for (let i = 0; i <= intervals; i++) {
+                labels.push((timeStep * i).toFixed(1) + 's');
+                // Simulate packet distribution (could be enhanced with real data)
+                const variance = Math.random() * 0.3 + 0.85;
+                data.push(Math.floor((totalPackets / intervals) * variance));
+            }
+            
+            new Chart(trafficCtx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Packets per Interval',
+                        data: data,
+                        borderColor: 'rgba(29, 233, 182, 1)',
+                        backgroundColor: 'rgba(29, 233, 182, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 3,
+                        pointHoverRadius: 5,
+                        pointBackgroundColor: 'rgba(29, 233, 182, 1)',
+                        pointBorderColor: '#071018',
+                        pointBorderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.05)'
+                            },
+                            ticks: {
+                                color: '#9aa6b2'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.05)'
+                            },
+                            ticks: {
+                                color: '#9aa6b2',
+                                maxRotation: 45,
+                                minRotation: 45
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#9aa6b2',
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(7, 16, 24, 0.95)',
+                            titleColor: '#e6eef6',
+                            bodyColor: '#9aa6b2',
+                            borderColor: 'rgba(255, 255, 255, 0.1)',
+                            borderWidth: 1,
+                            padding: 12
+                        }
+                    }
+                }
+            });
+        }
+        {% endif %}
+
+        // Expand sections function
+        function expandSection(sectionId, allData) {
+            const container = document.getElementById(sectionId + '_container');
+            const button = event.target;
+            
+            // Clear existing content
+            container.innerHTML = '';
+            
+            // Render all items
+            allData.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'anomaly-item';
+                
+                if (sectionId === 'port_scanning') {
+                    div.innerHTML = `
+                        <div class="anomaly-header">
+                            <span class="badge danger">HIGH</span>
+                            <code>${item.src_ip}</code>
+                        </div>
+                        <div class="anomaly-details">
+                            <span>Ports scanned: <strong>${item.port_count}</strong></span>
+                            <span>Scan rate: <strong>${item.scan_rate.toFixed(1)}</strong> ports/s</span>
+                            <span>Duration: <strong>${item.duration.toFixed(2)}</strong>s</span>
+                        </div>
+                    `;
+                } else if (sectionId === 'data_exfiltration') {
+                    div.innerHTML = `
+                        <div class="anomaly-header">
+                            <span class="badge ${item.confidence === 'HIGH' ? 'danger' : 'warn'}">${item.confidence}</span>
+                            <code>${item.flow}</code>
+                        </div>
+                        <div class="anomaly-details">
+                            <span>Volume: <strong>${(item.total_bytes / 1024 / 1024).toFixed(2)}</strong> MB</span>
+                            <span>Rate: <strong>${(item.byte_rate / 1024).toFixed(1)}</strong> KB/s</span>
+                            <span>Duration: <strong>${item.duration.toFixed(0)}</strong>s</span>
+                            <span>Packets: <strong>${item.packets}</strong></span>
+                        </div>
+                        <div class="anomaly-reasons">
+                            <strong>Indicators:</strong> ${item.reasons.join(', ')}
+                        </div>
+                    `;
+                } else if (sectionId === 'beaconing') {
+                    div.innerHTML = `
+                        <div class="anomaly-header">
+                            <span class="badge ${item.confidence === 'HIGH' ? 'danger' : 'warn'}">${item.confidence}</span>
+                            <code>${item.flow}</code>
+                        </div>
+                        <div class="anomaly-details">
+                            <span>Packets: <strong>${item.packets}</strong></span>
+                            <span>Interval: <strong>${item.mean_interval.toFixed(2)}</strong>s</span>
+                            <span>Regularity: <strong>${item.regularity_score.toFixed(3)}</strong></span>
+                            <span>Duration: <strong>${item.duration.toFixed(0)}</strong>s</span>
+                        </div>
+                    `;
+                } else if (sectionId === 'dns_tunneling') {
+                    div.innerHTML = `
+                        <div class="anomaly-header">
+                            <span class="badge ${item.confidence === 'HIGH' ? 'danger' : 'warn'}">${item.confidence}</span>
+                            <code>${item.flow}</code>
+                        </div>
+                        <div class="anomaly-details">
+                            <span>Query rate: <strong>${item.query_rate.toFixed(1)}</strong> qps</span>
+                            <span>Total queries: <strong>${item.total_queries}</strong></span>
+                            <span>Max size: <strong>${item.max_size.toFixed(0)}</strong>B</span>
+                            <span>Avg size: <strong>${item.avg_size.toFixed(0)}</strong>B</span>
+                        </div>
+                        <div class="anomaly-reasons">
+                            <strong>Indicators:</strong> ${item.reasons.join(', ')}
+                        </div>
+                    `;
+                }
+                
+                container.appendChild(div);
+            });
+            
+            // Replace button with collapse button
+            button.textContent = `Collapse (showing all ${allData.length})`;
+            button.onclick = () => collapseSection(sectionId, allData);
+        }
+
+        function collapseSection(sectionId, allData) {
+            const container = document.getElementById(sectionId + '_container');
+            const button = event.target;
+            
+            // Clear and show only first 5
+            container.innerHTML = '';
+            
+            const itemsToShow = allData.slice(0, 5);
+            itemsToShow.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'anomaly-item';
+                
+                // Same rendering logic as expand
+                if (sectionId === 'port_scanning') {
+                    div.innerHTML = `
+                        <div class="anomaly-header">
+                            <span class="badge danger">HIGH</span>
+                            <code>${item.src_ip}</code>
+                        </div>
+                        <div class="anomaly-details">
+                            <span>Ports scanned: <strong>${item.port_count}</strong></span>
+                            <span>Scan rate: <strong>${item.scan_rate.toFixed(1)}</strong> ports/s</span>
+                            <span>Duration: <strong>${item.duration.toFixed(2)}</strong>s</span>
+                        </div>
+                    `;
+                } else if (sectionId === 'data_exfiltration') {
+                    div.innerHTML = `
+                        <div class="anomaly-header">
+                            <span class="badge ${item.confidence === 'HIGH' ? 'danger' : 'warn'}">${item.confidence}</span>
+                            <code>${item.flow}</code>
+                        </div>
+                        <div class="anomaly-details">
+                            <span>Volume: <strong>${(item.total_bytes / 1024 / 1024).toFixed(2)}</strong> MB</span>
+                            <span>Rate: <strong>${(item.byte_rate / 1024).toFixed(1)}</strong> KB/s</span>
+                            <span>Duration: <strong>${item.duration.toFixed(0)}</strong>s</span>
+                            <span>Packets: <strong>${item.packets}</strong></span>
+                        </div>
+                        <div class="anomaly-reasons">
+                            <strong>Indicators:</strong> ${item.reasons.join(', ')}
+                        </div>
+                    `;
+                } else if (sectionId === 'beaconing') {
+                    div.innerHTML = `
+                        <div class="anomaly-header">
+                            <span class="badge ${item.confidence === 'HIGH' ? 'danger' : 'warn'}">${item.confidence}</span>
+                            <code>${item.flow}</code>
+                        </div>
+                        <div class="anomaly-details">
+                            <span>Packets: <strong>${item.packets}</strong></span>
+                            <span>Interval: <strong>${item.mean_interval.toFixed(2)}</strong>s</span>
+                            <span>Regularity: <strong>${item.regularity_score.toFixed(3)}</strong></span>
+                            <span>Duration: <strong>${item.duration.toFixed(0)}</strong>s</span>
+                        </div>
+                    `;
+                } else if (sectionId === 'dns_tunneling') {
+                    div.innerHTML = `
+                        <div class="anomaly-header">
+                            <span class="badge ${item.confidence === 'HIGH' ? 'danger' : 'warn'}">${item.confidence}</span>
+                            <code>${item.flow}</code>
+                        </div>
+                        <div class="anomaly-details">
+                            <span>Query rate: <strong>${item.query_rate.toFixed(1)}</strong> qps</span>
+                            <span>Total queries: <strong>${item.total_queries}</strong></span>
+                            <span>Max size: <strong>${item.max_size.toFixed(0)}</strong>B</span>
+                            <span>Avg size: <strong>${item.avg_size.toFixed(0)}</strong>B</span>
+                        </div>
+                        <div class="anomaly-reasons">
+                            <strong>Indicators:</strong> ${item.reasons.join(', ')}
+                        </div>
+                    `;
+                }
+                
+                container.appendChild(div);
+            });
+            
+            // Restore original button
+            button.textContent = `Show all ${allData.length} ${sectionId.replace('_', ' ')}`;
+            button.onclick = () => expandSection(sectionId, allData);
+        }
+    </script>
+</body>
+</html>

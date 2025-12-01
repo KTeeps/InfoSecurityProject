@@ -1,0 +1,2563 @@
+{
+  "packets": 48615,
+  "flows": 714,
+  "errors": 0,
+  "internal_ips": 4,
+  "stats": {
+    "total_packets": 48615,
+    "total_flows": 714,
+    "duration": 2067.52890086174,
+    "packets_per_second": 23.513576995096614,
+    "protocol_distribution": {
+      "UDP": 1302,
+      "TCP": 47300,
+      "ICMP": 13
+    },
+    "avg_packet_size": 865.7886660495732,
+    "median_packet_size": 1430.0,
+    "p95_packet_size": 1430.0,
+    "avg_flow_duration": 89.85971256064181,
+    "avg_flow_size": 58950.02240896359,
+    "top_sources": [
+      [
+        "83.137.149.15",
+        23281
+      ],
+      [
+        "10.6.13.133",
+        18405
+      ],
+      [
+        "104.21.112.1",
+        1013
+      ],
+      [
+        "10.6.13.3",
+        717
+      ],
+      [
+        "205.174.24.80",
+        650
+      ]
+    ],
+    "top_destinations": [
+      [
+        "10.6.13.133",
+        30206
+      ],
+      [
+        "83.137.149.15",
+        12204
+      ],
+      [
+        "10.6.13.3",
+        820
+      ],
+      [
+        "104.21.112.1",
+        714
+      ],
+      [
+        "104.21.80.1",
+        421
+      ]
+    ],
+    "top_ports": [
+      [
+        52527,
+        23281
+      ],
+      [
+        443,
+        15339
+      ],
+      [
+        80,
+        2125
+      ],
+      [
+        52516,
+        753
+      ],
+      [
+        52469,
+        650
+      ],
+      [
+        52463,
+        577
+      ],
+      [
+        52079,
+        222
+      ],
+      [
+        52472,
+        219
+      ],
+      [
+        52483,
+        217
+      ],
+      [
+        53,
+        201
+      ]
+    ]
+  },
+  "anomalies": {
+    "size_anomalies": [],
+    "size_median": 1430.0,
+    "size_mad": 0.0,
+    "port_scanning": [],
+    "syn_floods": [],
+    "data_exfiltration": [
+      {
+        "flow": "10.6.13.133:53495 -> 239.255.255.250:1900 (UDP)",
+        "total_bytes": 2565,
+        "byte_rate": 28.699492403921326,
+        "duration": 89.37440299987793,
+        "packets": 15,
+        "avg_packet_size": 171.0,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52429 -> 173.222.52.33:443 (TCP)",
+        "total_bytes": 1325,
+        "byte_rate": 17.12173903851797,
+        "duration": 77.38699889183044,
+        "packets": 11,
+        "avg_packet_size": 120.45454545454545,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52430 -> 52.156.123.84:443 (TCP)",
+        "total_bytes": 1368,
+        "byte_rate": 3239.5561309438785,
+        "duration": 0.42228007316589355,
+        "packets": 12,
+        "avg_packet_size": 114.0,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52431 -> 23.192.223.206:80 (TCP)",
+        "total_bytes": 411,
+        "byte_rate": 5956.089058418674,
+        "duration": 0.06900501251220703,
+        "packets": 5,
+        "avg_packet_size": 82.2,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52432 -> 104.208.203.90:443 (TCP)",
+        "total_bytes": 4379,
+        "byte_rate": 2.2514709208497163,
+        "duration": 1944.9507250785828,
+        "packets": 25,
+        "avg_packet_size": 175.16,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52447 -> 20.190.135.6:443 (TCP)",
+        "total_bytes": 6558,
+        "byte_rate": 82.04663497915874,
+        "duration": 79.93015193939209,
+        "packets": 13,
+        "avg_packet_size": 504.46153846153845,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52448 -> 217.20.51.22:80 (TCP)",
+        "total_bytes": 1043,
+        "byte_rate": 17.31331826892616,
+        "duration": 60.242640018463135,
+        "packets": 8,
+        "avg_packet_size": 130.375,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52449 -> 13.107.42.16:443 (TCP)",
+        "total_bytes": 3421,
+        "byte_rate": 10690.627230238635,
+        "duration": 0.31999993324279785,
+        "packets": 14,
+        "avg_packet_size": 244.35714285714286,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:63805 -> 23.198.7.186:443 (UDP)",
+        "total_bytes": 12621,
+        "byte_rate": 38908.08026177687,
+        "duration": 0.32437992095947266,
+        "packets": 20,
+        "avg_packet_size": 631.05,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52450 -> 204.79.197.203:443 (TCP)",
+        "total_bytes": 2497,
+        "byte_rate": 22.723977294025154,
+        "duration": 109.88393306732178,
+        "packets": 25,
+        "avg_packet_size": 99.88,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52451 -> 23.212.185.76:443 (TCP)",
+        "total_bytes": 6683,
+        "byte_rate": 61.24185185244904,
+        "duration": 109.12472105026245,
+        "packets": 84,
+        "avg_packet_size": 79.55952380952381,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52452 -> 13.107.42.16:443 (TCP)",
+        "total_bytes": 3504,
+        "byte_rate": 9131.302941719203,
+        "duration": 0.38373494148254395,
+        "packets": 12,
+        "avg_packet_size": 292.0,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:61141 -> 23.198.7.186:443 (UDP)",
+        "total_bytes": 5711,
+        "byte_rate": 31612.032829245953,
+        "duration": 0.18065905570983887,
+        "packets": 15,
+        "avg_packet_size": 380.73333333333335,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52453 -> 150.171.27.11:443 (TCP)",
+        "total_bytes": 3998,
+        "byte_rate": 1700.184964264723,
+        "duration": 2.351508855819702,
+        "packets": 16,
+        "avg_packet_size": 249.875,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52458 -> 40.126.29.13:443 (TCP)",
+        "total_bytes": 1804,
+        "byte_rate": 6103.788197256632,
+        "duration": 0.29555416107177734,
+        "packets": 13,
+        "avg_packet_size": 138.76923076923077,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52460 -> 23.198.7.180:443 (TCP)",
+        "total_bytes": 3294,
+        "byte_rate": 9377.027550034207,
+        "duration": 0.3512840270996094,
+        "packets": 15,
+        "avg_packet_size": 219.6,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52462 -> 150.171.28.11:443 (TCP)",
+        "total_bytes": 3427,
+        "byte_rate": 18924.60351741989,
+        "duration": 0.18108701705932617,
+        "packets": 14,
+        "avg_packet_size": 244.78571428571428,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52463 -> 142.250.115.99:443 (TCP)",
+        "total_bytes": 60176,
+        "byte_rate": 331.57168610293365,
+        "duration": 181.48714900016785,
+        "packets": 364,
+        "avg_packet_size": 165.3186813186813,
+        "score": 7,
+        "reasons": [
+          "large_outbound_58.8KB",
+          "asymmetric_flow"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52464 -> 173.194.208.155:443 (TCP)",
+        "total_bytes": 3676,
+        "byte_rate": 20.31010625127354,
+        "duration": 180.99363708496094,
+        "packets": 18,
+        "avg_packet_size": 204.22222222222223,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52465 -> 142.250.113.95:443 (TCP)",
+        "total_bytes": 3576,
+        "byte_rate": 19.79126657268223,
+        "duration": 180.6857578754425,
+        "packets": 20,
+        "avg_packet_size": 178.8,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52466 -> 142.250.113.95:443 (TCP)",
+        "total_bytes": 4276,
+        "byte_rate": 23.68314237793427,
+        "duration": 180.5503649711609,
+        "packets": 22,
+        "avg_packet_size": 194.36363636363637,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52467 -> 142.251.186.138:443 (TCP)",
+        "total_bytes": 3786,
+        "byte_rate": 21.02455079200337,
+        "duration": 180.07519102096558,
+        "packets": 22,
+        "avg_packet_size": 172.0909090909091,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52468 -> 142.251.186.138:443 (TCP)",
+        "total_bytes": 5223,
+        "byte_rate": 29.02480103380354,
+        "duration": 179.94955396652222,
+        "packets": 25,
+        "avg_packet_size": 208.92,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52469 -> 205.174.24.80:443 (TCP)",
+        "total_bytes": 33808,
+        "byte_rate": 4107.246721706656,
+        "duration": 8.23130488395691,
+        "packets": 415,
+        "avg_packet_size": 81.46506024096385,
+        "score": 6,
+        "reasons": [
+          "medium_outbound_33.0KB",
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52470 -> 142.250.115.95:443 (TCP)",
+        "total_bytes": 3436,
+        "byte_rate": 19.738163288682117,
+        "duration": 174.0790138244629,
+        "packets": 18,
+        "avg_packet_size": 190.88888888888889,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52471 -> 142.250.115.106:443 (TCP)",
+        "total_bytes": 3830,
+        "byte_rate": 22.00405412100748,
+        "duration": 174.05883383750916,
+        "packets": 19,
+        "avg_packet_size": 201.57894736842104,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52472 -> 142.250.138.97:443 (TCP)",
+        "total_bytes": 10176,
+        "byte_rate": 58.54521866050432,
+        "duration": 173.81436491012573,
+        "packets": 127,
+        "avg_packet_size": 80.1259842519685,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52473 -> 142.250.115.94:443 (TCP)",
+        "total_bytes": 8970,
+        "byte_rate": 51.623535434287305,
+        "duration": 173.75795602798462,
+        "packets": 110,
+        "avg_packet_size": 81.54545454545455,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52474 -> 67.217.228.199:443 (TCP)",
+        "total_bytes": 3099,
+        "byte_rate": 360.72831031961226,
+        "duration": 8.59095311164856,
+        "packets": 13,
+        "avg_packet_size": 238.3846153846154,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52475 -> 13.107.246.57:443 (TCP)",
+        "total_bytes": 5045,
+        "byte_rate": 55.72470858039161,
+        "duration": 90.5343451499939,
+        "packets": 32,
+        "avg_packet_size": 157.65625,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52476 -> 173.194.208.94:443 (TCP)",
+        "total_bytes": 4308,
+        "byte_rate": 24.795028609466893,
+        "duration": 173.74450612068176,
+        "packets": 32,
+        "avg_packet_size": 134.625,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52477 -> 109.61.92.48:443 (TCP)",
+        "total_bytes": 4127,
+        "byte_rate": 23.753527467712846,
+        "duration": 173.74261593818665,
+        "packets": 24,
+        "avg_packet_size": 171.95833333333334,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52478 -> 150.171.27.11:443 (TCP)",
+        "total_bytes": 4933,
+        "byte_rate": 54.54175956850748,
+        "duration": 90.44446015357971,
+        "packets": 18,
+        "avg_packet_size": 274.05555555555554,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52479 -> 109.61.92.48:443 (TCP)",
+        "total_bytes": 5328,
+        "byte_rate": 30.719968285505715,
+        "duration": 173.4376790523529,
+        "packets": 47,
+        "avg_packet_size": 113.36170212765957,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52480 -> 142.250.115.104:443 (TCP)",
+        "total_bytes": 5296,
+        "byte_rate": 30.54106917546122,
+        "duration": 173.40584802627563,
+        "packets": 35,
+        "avg_packet_size": 151.31428571428572,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52481 -> 157.240.24.13:443 (TCP)",
+        "total_bytes": 6518,
+        "byte_rate": 99.88206926868506,
+        "duration": 65.2569580078125,
+        "packets": 57,
+        "avg_packet_size": 114.35087719298245,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52482 -> 142.250.115.94:443 (TCP)",
+        "total_bytes": 2391,
+        "byte_rate": 17476.02303048891,
+        "duration": 0.13681602478027344,
+        "packets": 9,
+        "avg_packet_size": 265.6666666666667,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52483 -> 142.250.115.94:443 (TCP)",
+        "total_bytes": 11495,
+        "byte_rate": 66.3641013563945,
+        "duration": 173.21111512184143,
+        "packets": 146,
+        "avg_packet_size": 78.73287671232876,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52484 -> 44.239.34.26:443 (TCP)",
+        "total_bytes": 3978,
+        "byte_rate": 22.96750976146688,
+        "duration": 173.2011890411377,
+        "packets": 22,
+        "avg_packet_size": 180.8181818181818,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52485 -> 216.239.38.181:443 (TCP)",
+        "total_bytes": 4328,
+        "byte_rate": 24.999639990650966,
+        "duration": 173.12249302864075,
+        "packets": 19,
+        "avg_packet_size": 227.78947368421052,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52486 -> 142.250.138.155:443 (TCP)",
+        "total_bytes": 3799,
+        "byte_rate": 21.943996660051116,
+        "duration": 173.12251996994019,
+        "packets": 19,
+        "avg_packet_size": 199.94736842105263,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52487 -> 23.96.124.68:443 (TCP)",
+        "total_bytes": 100240,
+        "byte_rate": 1346.9433223112414,
+        "duration": 74.42035484313965,
+        "packets": 89,
+        "avg_packet_size": 1126.2921348314608,
+        "score": 8,
+        "reasons": [
+          "large_outbound_97.9KB",
+          "asymmetric_flow",
+          "large_packets_1126B"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52488 -> 23.96.124.68:443 (TCP)",
+        "total_bytes": 2467,
+        "byte_rate": 186.98937404055286,
+        "duration": 13.193263053894043,
+        "packets": 10,
+        "avg_packet_size": 246.7,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52489 -> 157.240.24.35:443 (TCP)",
+        "total_bytes": 2318,
+        "byte_rate": 21822.190012748917,
+        "duration": 0.10622215270996094,
+        "packets": 9,
+        "avg_packet_size": 257.55555555555554,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52490 -> 157.240.24.35:443 (TCP)",
+        "total_bytes": 3591,
+        "byte_rate": 55.052295406423895,
+        "duration": 65.22888779640198,
+        "packets": 19,
+        "avg_packet_size": 189.0,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52491 -> 157.240.24.35:443 (TCP)",
+        "total_bytes": 4316,
+        "byte_rate": 66.22413096891843,
+        "duration": 65.17261815071106,
+        "packets": 20,
+        "avg_packet_size": 215.8,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52492 -> 23.96.124.68:443 (TCP)",
+        "total_bytes": 2643,
+        "byte_rate": 201.35036459877878,
+        "duration": 13.126373052597046,
+        "packets": 10,
+        "avg_packet_size": 264.3,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52493 -> 173.194.208.94:443 (TCP)",
+        "total_bytes": 3713,
+        "byte_rate": 21.47859044475332,
+        "duration": 172.8698170185089,
+        "packets": 22,
+        "avg_packet_size": 168.77272727272728,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52494 -> 104.16.124.96:443 (TCP)",
+        "total_bytes": 3364,
+        "byte_rate": 19.60172693608586,
+        "duration": 171.6175320148468,
+        "packets": 17,
+        "avg_packet_size": 197.88235294117646,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52495 -> 67.217.228.199:443 (TCP)",
+        "total_bytes": 4003,
+        "byte_rate": 338.1796442259193,
+        "duration": 11.836904048919678,
+        "packets": 22,
+        "avg_packet_size": 181.95454545454547,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52496 -> 13.107.246.57:443 (TCP)",
+        "total_bytes": 3837,
+        "byte_rate": 42.557094171186414,
+        "duration": 90.16123104095459,
+        "packets": 17,
+        "avg_packet_size": 225.7058823529412,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52079 -> 23.198.7.186:443 (UDP)",
+        "total_bytes": 100451,
+        "byte_rate": 1706.7079854902652,
+        "duration": 58.85658288002014,
+        "packets": 176,
+        "avg_packet_size": 570.7443181818181,
+        "score": 7,
+        "reasons": [
+          "large_outbound_98.1KB",
+          "asymmetric_flow"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52497 -> 204.79.197.222:443 (TCP)",
+        "total_bytes": 6647,
+        "byte_rate": 66.3135874826342,
+        "duration": 100.23586797714233,
+        "packets": 33,
+        "avg_packet_size": 201.42424242424244,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52498 -> 150.171.73.254:443 (TCP)",
+        "total_bytes": 4299,
+        "byte_rate": 47.63695176205501,
+        "duration": 90.24506902694702,
+        "packets": 18,
+        "avg_packet_size": 238.83333333333334,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52499 -> 52.113.196.254:443 (TCP)",
+        "total_bytes": 4311,
+        "byte_rate": 47.70688616874143,
+        "duration": 90.36431312561035,
+        "packets": 17,
+        "avg_packet_size": 253.58823529411765,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52500 -> 191.232.215.149:443 (TCP)",
+        "total_bytes": 4357,
+        "byte_rate": 47.75680777936266,
+        "duration": 91.23306608200073,
+        "packets": 16,
+        "avg_packet_size": 272.3125,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52501 -> 172.202.65.254:443 (TCP)",
+        "total_bytes": 4429,
+        "byte_rate": 49.02145807564501,
+        "duration": 90.34818983078003,
+        "packets": 18,
+        "avg_packet_size": 246.05555555555554,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52502 -> 13.107.42.10:443 (TCP)",
+        "total_bytes": 4270,
+        "byte_rate": 47.277105565119804,
+        "duration": 90.31855797767639,
+        "packets": 17,
+        "avg_packet_size": 251.1764705882353,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52503 -> 13.107.18.254:443 (TCP)",
+        "total_bytes": 4173,
+        "byte_rate": 46.2012395171064,
+        "duration": 90.32225203514099,
+        "packets": 17,
+        "avg_packet_size": 245.47058823529412,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52508 -> 150.171.27.11:443 (TCP)",
+        "total_bytes": 12187,
+        "byte_rate": 135.0746134170983,
+        "duration": 90.2242078781128,
+        "packets": 20,
+        "avg_packet_size": 609.35,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:53273 -> 239.255.255.250:3702 (UDP)",
+        "total_bytes": 4662,
+        "byte_rate": 729.2946503497911,
+        "duration": 6.392477989196777,
+        "packets": 7,
+        "avg_packet_size": 666.0,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52510 -> 13.107.246.57:443 (TCP)",
+        "total_bytes": 3831,
+        "byte_rate": 42.42655622482126,
+        "duration": 90.29721808433533,
+        "packets": 17,
+        "avg_packet_size": 225.35294117647058,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52511 -> 150.171.28.11:443 (TCP)",
+        "total_bytes": 22360,
+        "byte_rate": 246.65355876620353,
+        "duration": 90.65346598625183,
+        "packets": 31,
+        "avg_packet_size": 721.2903225806451,
+        "score": 5,
+        "reasons": [
+          "asymmetric_flow",
+          "large_packets_721B"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52512 -> 20.189.173.6:443 (TCP)",
+        "total_bytes": 5390,
+        "byte_rate": 59.43877882163624,
+        "duration": 90.68154001235962,
+        "packets": 17,
+        "avg_packet_size": 317.05882352941177,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52513 -> 20.190.135.6:443 (TCP)",
+        "total_bytes": 6263,
+        "byte_rate": 17422.427203178213,
+        "duration": 0.3594791889190674,
+        "packets": 12,
+        "avg_packet_size": 521.9166666666666,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52514 -> 172.67.146.241:443 (TCP)",
+        "total_bytes": 2077,
+        "byte_rate": 465.314883334366,
+        "duration": 4.463644027709961,
+        "packets": 24,
+        "avg_packet_size": 86.54166666666667,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52515 -> 104.21.24.186:80 (TCP)",
+        "total_bytes": 659,
+        "byte_rate": 6.439406554240551,
+        "duration": 102.338623046875,
+        "packets": 8,
+        "avg_packet_size": 82.375,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52516 -> 104.21.112.1:80 (TCP)",
+        "total_bytes": 26396,
+        "byte_rate": 208.24722432269817,
+        "duration": 126.75319004058838,
+        "packets": 388,
+        "avg_packet_size": 68.03092783505154,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52517 -> 23.96.124.68:443 (TCP)",
+        "total_bytes": 3673,
+        "byte_rate": 60.272565268645096,
+        "duration": 60.93983197212219,
+        "packets": 13,
+        "avg_packet_size": 282.53846153846155,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52518 -> 13.107.42.16:443 (TCP)",
+        "total_bytes": 3410,
+        "byte_rate": 7328.682750312694,
+        "duration": 0.46529507637023926,
+        "packets": 15,
+        "avg_packet_size": 227.33333333333334,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52519 -> 23.212.185.87:443 (TCP)",
+        "total_bytes": 2489,
+        "byte_rate": 5902.56717579091,
+        "duration": 0.42168092727661133,
+        "packets": 10,
+        "avg_packet_size": 248.9,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52520 -> 23.212.185.87:443 (TCP)",
+        "total_bytes": 2425,
+        "byte_rate": 5607.754006567528,
+        "duration": 0.4324369430541992,
+        "packets": 10,
+        "avg_packet_size": 242.5,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52521 -> 204.79.197.203:443 (TCP)",
+        "total_bytes": 4559,
+        "byte_rate": 4575.535752041206,
+        "duration": 0.9963860511779785,
+        "packets": 19,
+        "avg_packet_size": 239.94736842105263,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52522 -> 150.171.27.12:443 (TCP)",
+        "total_bytes": 4224,
+        "byte_rate": 7318.859029444825,
+        "duration": 0.577139139175415,
+        "packets": 18,
+        "avg_packet_size": 234.66666666666666,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:59942 -> 23.212.185.76:443 (UDP)",
+        "total_bytes": 5083,
+        "byte_rate": 42018.67858135341,
+        "duration": 0.12097001075744629,
+        "packets": 10,
+        "avg_packet_size": 508.3,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52523 -> 150.171.27.12:443 (TCP)",
+        "total_bytes": 4836,
+        "byte_rate": 12285.030494456076,
+        "duration": 0.3936498165130615,
+        "packets": 19,
+        "avg_packet_size": 254.52631578947367,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52524 -> 204.79.197.203:443 (TCP)",
+        "total_bytes": 3138,
+        "byte_rate": 10462.130188746736,
+        "duration": 0.2999389171600342,
+        "packets": 10,
+        "avg_packet_size": 313.8,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:64463 -> 23.198.7.186:443 (UDP)",
+        "total_bytes": 6736,
+        "byte_rate": 49953.29038782853,
+        "duration": 0.13484597206115723,
+        "packets": 47,
+        "avg_packet_size": 143.31914893617022,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52525 -> 13.107.42.16:443 (TCP)",
+        "total_bytes": 3692,
+        "byte_rate": 14997.704992465007,
+        "duration": 0.2461709976196289,
+        "packets": 14,
+        "avg_packet_size": 263.7142857142857,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52526 -> 23.198.7.168:443 (TCP)",
+        "total_bytes": 4213,
+        "byte_rate": 2104.2905046028445,
+        "duration": 2.0020999908447266,
+        "packets": 26,
+        "avg_packet_size": 162.03846153846155,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:58298 -> 23.198.7.182:443 (UDP)",
+        "total_bytes": 6135,
+        "byte_rate": 30981.535420035372,
+        "duration": 0.19802117347717285,
+        "packets": 23,
+        "avg_packet_size": 266.7391304347826,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:53770 -> 23.212.185.76:443 (UDP)",
+        "total_bytes": 7631,
+        "byte_rate": 41371.61189183599,
+        "duration": 0.1844501495361328,
+        "packets": 27,
+        "avg_packet_size": 282.6296296296296,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52527 -> 83.137.149.15:443 (TCP)",
+        "total_bytes": 754451,
+        "byte_rate": 5546.7606669021225,
+        "duration": 136.01650500297546,
+        "packets": 12204,
+        "avg_packet_size": 61.81997705670272,
+        "score": 7,
+        "reasons": [
+          "large_outbound_736.8KB",
+          "asymmetric_flow"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52528 -> 23.96.124.68:443 (TCP)",
+        "total_bytes": 6409,
+        "byte_rate": 297.41524887855064,
+        "duration": 21.548995971679688,
+        "packets": 13,
+        "avg_packet_size": 493.0,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52529 -> 23.96.124.68:443 (TCP)",
+        "total_bytes": 3003,
+        "byte_rate": 74.80107296453136,
+        "duration": 40.146482944488525,
+        "packets": 16,
+        "avg_packet_size": 187.6875,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52530 -> 150.171.28.11:443 (TCP)",
+        "total_bytes": 3517,
+        "byte_rate": 218.58556636198415,
+        "duration": 16.08980894088745,
+        "packets": 14,
+        "avg_packet_size": 251.21428571428572,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52531 -> 104.21.16.1:80 (TCP)",
+        "total_bytes": 32162,
+        "byte_rate": 1590.6448107463125,
+        "duration": 20.219473123550415,
+        "packets": 27,
+        "avg_packet_size": 1191.1851851851852,
+        "score": 7,
+        "reasons": [
+          "medium_outbound_31.4KB",
+          "asymmetric_flow",
+          "large_packets_1191B"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52532 -> 104.21.16.1:80 (TCP)",
+        "total_bytes": 32212,
+        "byte_rate": 1604.7731520261402,
+        "duration": 20.07261896133423,
+        "packets": 27,
+        "avg_packet_size": 1193.037037037037,
+        "score": 7,
+        "reasons": [
+          "medium_outbound_31.5KB",
+          "asymmetric_flow",
+          "large_packets_1193B"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52533 -> 104.21.16.1:80 (TCP)",
+        "total_bytes": 32193,
+        "byte_rate": 1602.7372350184346,
+        "duration": 20.086261987686157,
+        "packets": 27,
+        "avg_packet_size": 1192.3333333333333,
+        "score": 7,
+        "reasons": [
+          "medium_outbound_31.4KB",
+          "asymmetric_flow",
+          "large_packets_1192B"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52534 -> 104.16.230.132:80 (TCP)",
+        "total_bytes": 33649,
+        "byte_rate": 1677.6197133571216,
+        "duration": 20.05758500099182,
+        "packets": 28,
+        "avg_packet_size": 1201.75,
+        "score": 7,
+        "reasons": [
+          "medium_outbound_32.9KB",
+          "asymmetric_flow",
+          "large_packets_1202B"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52540 -> 104.21.16.1:80 (TCP)",
+        "total_bytes": 32190,
+        "byte_rate": 1600.7876367721692,
+        "duration": 20.108850955963135,
+        "packets": 27,
+        "avg_packet_size": 1192.2222222222222,
+        "score": 7,
+        "reasons": [
+          "medium_outbound_31.4KB",
+          "asymmetric_flow",
+          "large_packets_1192B"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52541 -> 104.21.16.1:80 (TCP)",
+        "total_bytes": 32165,
+        "byte_rate": 1601.951034320409,
+        "duration": 20.078641176223755,
+        "packets": 27,
+        "avg_packet_size": 1191.2962962962963,
+        "score": 7,
+        "reasons": [
+          "medium_outbound_31.4KB",
+          "asymmetric_flow",
+          "large_packets_1191B"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52542 -> 104.16.230.132:80 (TCP)",
+        "total_bytes": 35108,
+        "byte_rate": 1737.273461807865,
+        "duration": 20.208678007125854,
+        "packets": 29,
+        "avg_packet_size": 1210.6206896551723,
+        "score": 7,
+        "reasons": [
+          "medium_outbound_34.3KB",
+          "asymmetric_flow",
+          "large_packets_1211B"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52543 -> 104.21.16.1:80 (TCP)",
+        "total_bytes": 32174,
+        "byte_rate": 1602.744767388201,
+        "duration": 20.074312925338745,
+        "packets": 27,
+        "avg_packet_size": 1191.6296296296296,
+        "score": 7,
+        "reasons": [
+          "medium_outbound_31.4KB",
+          "asymmetric_flow",
+          "large_packets_1192B"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52544 -> 104.16.230.132:80 (TCP)",
+        "total_bytes": 32231,
+        "byte_rate": 1605.8885237638494,
+        "duration": 20.07050895690918,
+        "packets": 27,
+        "avg_packet_size": 1193.7407407407406,
+        "score": 7,
+        "reasons": [
+          "medium_outbound_31.5KB",
+          "asymmetric_flow",
+          "large_packets_1194B"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52551 -> 20.190.157.13:443 (TCP)",
+        "total_bytes": 1924,
+        "byte_rate": 4996.053780143297,
+        "duration": 0.3851039409637451,
+        "packets": 15,
+        "avg_packet_size": 128.26666666666668,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52552 -> 23.96.180.189:443 (TCP)",
+        "total_bytes": 3627,
+        "byte_rate": 9398.639084993245,
+        "duration": 0.3859069347381592,
+        "packets": 16,
+        "avg_packet_size": 226.6875,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52553 -> 52.140.118.28:443 (TCP)",
+        "total_bytes": 2637,
+        "byte_rate": 1616.4417241609115,
+        "duration": 1.6313610076904297,
+        "packets": 13,
+        "avg_packet_size": 202.84615384615384,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52554 -> 104.21.16.1:80 (TCP)",
+        "total_bytes": 33624,
+        "byte_rate": 1649.545321153545,
+        "duration": 20.383798837661743,
+        "packets": 28,
+        "avg_packet_size": 1200.857142857143,
+        "score": 7,
+        "reasons": [
+          "medium_outbound_32.8KB",
+          "asymmetric_flow",
+          "large_packets_1201B"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52555 -> 104.21.16.1:80 (TCP)",
+        "total_bytes": 33627,
+        "byte_rate": 1673.9243051777735,
+        "duration": 20.088721990585327,
+        "packets": 28,
+        "avg_packet_size": 1200.9642857142858,
+        "score": 7,
+        "reasons": [
+          "medium_outbound_32.8KB",
+          "asymmetric_flow",
+          "large_packets_1201B"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52556 -> 104.21.16.1:80 (TCP)",
+        "total_bytes": 32209,
+        "byte_rate": 1591.44086915586,
+        "duration": 20.238892078399658,
+        "packets": 27,
+        "avg_packet_size": 1192.9259259259259,
+        "score": 7,
+        "reasons": [
+          "medium_outbound_31.5KB",
+          "asymmetric_flow",
+          "large_packets_1193B"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52557 -> 104.21.16.1:80 (TCP)",
+        "total_bytes": 32178,
+        "byte_rate": 1602.010479206602,
+        "duration": 20.086010932922363,
+        "packets": 27,
+        "avg_packet_size": 1191.7777777777778,
+        "score": 7,
+        "reasons": [
+          "medium_outbound_31.4KB",
+          "asymmetric_flow",
+          "large_packets_1192B"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52558 -> 13.74.187.43:443 (TCP)",
+        "total_bytes": 1991,
+        "byte_rate": 3044.6730682078783,
+        "duration": 0.6539289951324463,
+        "packets": 12,
+        "avg_packet_size": 165.91666666666666,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52559 -> 173.222.52.33:443 (TCP)",
+        "total_bytes": 1325,
+        "byte_rate": 9.263577010883326,
+        "duration": 143.033301115036,
+        "packets": 11,
+        "avg_packet_size": 120.45454545454545,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52560 -> 104.16.230.132:80 (TCP)",
+        "total_bytes": 32212,
+        "byte_rate": 1605.964463407775,
+        "duration": 20.0577290058136,
+        "packets": 27,
+        "avg_packet_size": 1193.037037037037,
+        "score": 7,
+        "reasons": [
+          "medium_outbound_31.5KB",
+          "asymmetric_flow",
+          "large_packets_1193B"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52561 -> 104.16.230.132:80 (TCP)",
+        "total_bytes": 32208,
+        "byte_rate": 1607.2132046184042,
+        "duration": 20.039656162261963,
+        "packets": 27,
+        "avg_packet_size": 1192.888888888889,
+        "score": 7,
+        "reasons": [
+          "medium_outbound_31.5KB",
+          "asymmetric_flow",
+          "large_packets_1193B"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52562 -> 104.21.16.1:80 (TCP)",
+        "total_bytes": 35039,
+        "byte_rate": 1744.9214590719912,
+        "duration": 20.080559968948364,
+        "packets": 29,
+        "avg_packet_size": 1208.2413793103449,
+        "score": 7,
+        "reasons": [
+          "medium_outbound_34.2KB",
+          "asymmetric_flow",
+          "large_packets_1208B"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52563 -> 104.21.16.1:80 (TCP)",
+        "total_bytes": 32163,
+        "byte_rate": 1600.6059452983347,
+        "duration": 20.09426498413086,
+        "packets": 27,
+        "avg_packet_size": 1191.2222222222222,
+        "score": 7,
+        "reasons": [
+          "medium_outbound_31.4KB",
+          "asymmetric_flow",
+          "large_packets_1191B"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52568 -> 40.126.29.11:443 (TCP)",
+        "total_bytes": 1924,
+        "byte_rate": 4390.1087843619825,
+        "duration": 0.43825793266296387,
+        "packets": 15,
+        "avg_packet_size": 128.26666666666668,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52569 -> 20.50.80.213:443 (TCP)",
+        "total_bytes": 8559,
+        "byte_rate": 5888.369937220767,
+        "duration": 1.4535431861877441,
+        "packets": 23,
+        "avg_packet_size": 372.1304347826087,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52570 -> 104.21.112.1:80 (TCP)",
+        "total_bytes": 33611,
+        "byte_rate": 1673.3455010583314,
+        "duration": 20.086108922958374,
+        "packets": 28,
+        "avg_packet_size": 1200.392857142857,
+        "score": 7,
+        "reasons": [
+          "medium_outbound_32.8KB",
+          "asymmetric_flow",
+          "large_packets_1200B"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52571 -> 23.192.223.240:80 (TCP)",
+        "total_bytes": 658,
+        "byte_rate": 1824.1347499776928,
+        "duration": 0.3607189655303955,
+        "packets": 5,
+        "avg_packet_size": 131.6,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52572 -> 104.21.16.1:80 (TCP)",
+        "total_bytes": 32191,
+        "byte_rate": 1603.7616964015256,
+        "duration": 20.072184085845947,
+        "packets": 27,
+        "avg_packet_size": 1192.2592592592594,
+        "score": 7,
+        "reasons": [
+          "medium_outbound_31.4KB",
+          "asymmetric_flow",
+          "large_packets_1192B"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52573 -> 104.21.112.1:80 (TCP)",
+        "total_bytes": 32197,
+        "byte_rate": 1592.6821761129668,
+        "duration": 20.21558380126953,
+        "packets": 27,
+        "avg_packet_size": 1192.4814814814815,
+        "score": 7,
+        "reasons": [
+          "medium_outbound_31.4KB",
+          "asymmetric_flow",
+          "large_packets_1192B"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52574 -> 104.16.230.132:80 (TCP)",
+        "total_bytes": 32236,
+        "byte_rate": 1607.542257281957,
+        "duration": 20.052972078323364,
+        "packets": 27,
+        "avg_packet_size": 1193.9259259259259,
+        "score": 7,
+        "reasons": [
+          "medium_outbound_31.5KB",
+          "asymmetric_flow",
+          "large_packets_1194B"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52575 -> 104.21.112.1:80 (TCP)",
+        "total_bytes": 32208,
+        "byte_rate": 1591.7090208649279,
+        "duration": 20.234854221343994,
+        "packets": 27,
+        "avg_packet_size": 1192.888888888889,
+        "score": 7,
+        "reasons": [
+          "medium_outbound_31.5KB",
+          "asymmetric_flow",
+          "large_packets_1193B"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52576 -> 104.21.16.1:80 (TCP)",
+        "total_bytes": 32209,
+        "byte_rate": 1603.2630552026487,
+        "duration": 20.089653968811035,
+        "packets": 27,
+        "avg_packet_size": 1192.9259259259259,
+        "score": 7,
+        "reasons": [
+          "medium_outbound_31.5KB",
+          "asymmetric_flow",
+          "large_packets_1193B"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52581 -> 20.190.157.14:443 (TCP)",
+        "total_bytes": 1864,
+        "byte_rate": 4288.922602609719,
+        "duration": 0.43460798263549805,
+        "packets": 14,
+        "avg_packet_size": 133.14285714285714,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52582 -> 104.21.112.1:80 (TCP)",
+        "total_bytes": 32196,
+        "byte_rate": 1583.4046437134662,
+        "duration": 20.333400011062622,
+        "packets": 27,
+        "avg_packet_size": 1192.4444444444443,
+        "score": 7,
+        "reasons": [
+          "medium_outbound_31.4KB",
+          "asymmetric_flow",
+          "large_packets_1192B"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52584 -> 104.21.112.1:80 (TCP)",
+        "total_bytes": 32178,
+        "byte_rate": 1602.709762506098,
+        "duration": 20.077247142791748,
+        "packets": 27,
+        "avg_packet_size": 1191.7777777777778,
+        "score": 7,
+        "reasons": [
+          "medium_outbound_31.4KB",
+          "asymmetric_flow",
+          "large_packets_1192B"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52585 -> 104.21.112.1:80 (TCP)",
+        "total_bytes": 32199,
+        "byte_rate": 1591.5219179793523,
+        "duration": 20.23157811164856,
+        "packets": 27,
+        "avg_packet_size": 1192.5555555555557,
+        "score": 7,
+        "reasons": [
+          "medium_outbound_31.4KB",
+          "asymmetric_flow",
+          "large_packets_1193B"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52586 -> 104.21.80.1:80 (TCP)",
+        "total_bytes": 32207,
+        "byte_rate": 1595.376664656708,
+        "duration": 20.187709093093872,
+        "packets": 27,
+        "avg_packet_size": 1192.851851851852,
+        "score": 7,
+        "reasons": [
+          "medium_outbound_31.5KB",
+          "asymmetric_flow",
+          "large_packets_1193B"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52587 -> 104.16.231.132:80 (TCP)",
+        "total_bytes": 33655,
+        "byte_rate": 1676.4276001299916,
+        "duration": 20.075427055358887,
+        "packets": 28,
+        "avg_packet_size": 1201.9642857142858,
+        "score": 7,
+        "reasons": [
+          "medium_outbound_32.9KB",
+          "asymmetric_flow",
+          "large_packets_1202B"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52588 -> 23.212.185.87:443 (TCP)",
+        "total_bytes": 1705,
+        "byte_rate": 15.573614068636154,
+        "duration": 109.48004698753357,
+        "packets": 14,
+        "avg_packet_size": 121.78571428571429,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52589 -> 104.21.80.1:80 (TCP)",
+        "total_bytes": 35074,
+        "byte_rate": 1747.9838112463367,
+        "duration": 20.06540322303772,
+        "packets": 29,
+        "avg_packet_size": 1209.448275862069,
+        "score": 7,
+        "reasons": [
+          "medium_outbound_34.3KB",
+          "asymmetric_flow",
+          "large_packets_1209B"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52590 -> 104.21.80.1:80 (TCP)",
+        "total_bytes": 35126,
+        "byte_rate": 1712.1171095544396,
+        "duration": 20.516119956970215,
+        "packets": 30,
+        "avg_packet_size": 1170.8666666666666,
+        "score": 7,
+        "reasons": [
+          "medium_outbound_34.3KB",
+          "asymmetric_flow",
+          "large_packets_1171B"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52591 -> 104.21.80.1:80 (TCP)",
+        "total_bytes": 36509,
+        "byte_rate": 1819.4295085958656,
+        "duration": 20.066179990768433,
+        "packets": 30,
+        "avg_packet_size": 1216.9666666666667,
+        "score": 7,
+        "reasons": [
+          "medium_outbound_35.7KB",
+          "asymmetric_flow",
+          "large_packets_1217B"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52592 -> 104.21.80.1:80 (TCP)",
+        "total_bytes": 32179,
+        "byte_rate": 1602.8268922244413,
+        "duration": 20.076403856277466,
+        "packets": 27,
+        "avg_packet_size": 1191.8148148148148,
+        "score": 7,
+        "reasons": [
+          "medium_outbound_31.4KB",
+          "asymmetric_flow",
+          "large_packets_1192B"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52593 -> 104.21.80.1:80 (TCP)",
+        "total_bytes": 32197,
+        "byte_rate": 1601.5486113399822,
+        "duration": 20.10366702079773,
+        "packets": 27,
+        "avg_packet_size": 1192.4814814814815,
+        "score": 7,
+        "reasons": [
+          "medium_outbound_31.4KB",
+          "asymmetric_flow",
+          "large_packets_1192B"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52594 -> 40.69.76.172:443 (TCP)",
+        "total_bytes": 2115,
+        "byte_rate": 18.96753682337163,
+        "duration": 111.50630784034729,
+        "packets": 14,
+        "avg_packet_size": 151.07142857142858,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52595 -> 173.222.52.33:443 (TCP)",
+        "total_bytes": 1391,
+        "byte_rate": 14.073269635633467,
+        "duration": 98.83985996246338,
+        "packets": 12,
+        "avg_packet_size": 115.91666666666667,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52596 -> 104.21.80.1:80 (TCP)",
+        "total_bytes": 35056,
+        "byte_rate": 1732.501400471473,
+        "duration": 20.2343270778656,
+        "packets": 29,
+        "avg_packet_size": 1208.8275862068965,
+        "score": 7,
+        "reasons": [
+          "medium_outbound_34.2KB",
+          "asymmetric_flow",
+          "large_packets_1209B"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52597 -> 104.16.231.132:80 (TCP)",
+        "total_bytes": 32223,
+        "byte_rate": 1607.3418072442487,
+        "duration": 20.0473849773407,
+        "packets": 27,
+        "avg_packet_size": 1193.4444444444443,
+        "score": 7,
+        "reasons": [
+          "medium_outbound_31.5KB",
+          "asymmetric_flow",
+          "large_packets_1193B"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52598 -> 52.123.129.14:443 (TCP)",
+        "total_bytes": 2298,
+        "byte_rate": 6687.173415349434,
+        "duration": 0.3436429500579834,
+        "packets": 12,
+        "avg_packet_size": 191.5,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52599 -> 104.21.80.1:80 (TCP)",
+        "total_bytes": 32197,
+        "byte_rate": 1602.0069035860674,
+        "duration": 20.09791588783264,
+        "packets": 27,
+        "avg_packet_size": 1192.4814814814815,
+        "score": 7,
+        "reasons": [
+          "medium_outbound_31.4KB",
+          "asymmetric_flow",
+          "large_packets_1192B"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52600 -> 40.69.76.172:443 (TCP)",
+        "total_bytes": 2059,
+        "byte_rate": 16.834562614591178,
+        "duration": 122.30789995193481,
+        "packets": 13,
+        "avg_packet_size": 158.3846153846154,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52601 -> 173.222.52.33:443 (TCP)",
+        "total_bytes": 1505,
+        "byte_rate": 12.505133666417393,
+        "duration": 120.35057282447815,
+        "packets": 12,
+        "avg_packet_size": 125.41666666666667,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52602 -> 104.16.231.132:80 (TCP)",
+        "total_bytes": 32229,
+        "byte_rate": 1607.0574265348855,
+        "duration": 20.05466604232788,
+        "packets": 27,
+        "avg_packet_size": 1193.6666666666667,
+        "score": 7,
+        "reasons": [
+          "medium_outbound_31.5KB",
+          "asymmetric_flow",
+          "large_packets_1194B"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52603 -> 104.21.80.1:80 (TCP)",
+        "total_bytes": 32187,
+        "byte_rate": 1601.1054200681976,
+        "duration": 20.102986097335815,
+        "packets": 27,
+        "avg_packet_size": 1192.111111111111,
+        "score": 7,
+        "reasons": [
+          "medium_outbound_31.4KB",
+          "asymmetric_flow",
+          "large_packets_1192B"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52604 -> 104.16.231.132:80 (TCP)",
+        "total_bytes": 35094,
+        "byte_rate": 1748.6142919312117,
+        "duration": 20.069606065750122,
+        "packets": 29,
+        "avg_packet_size": 1210.1379310344828,
+        "score": 7,
+        "reasons": [
+          "medium_outbound_34.3KB",
+          "asymmetric_flow",
+          "large_packets_1210B"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52605 -> 104.21.64.1:80 (TCP)",
+        "total_bytes": 33637,
+        "byte_rate": 1677.482323007825,
+        "duration": 20.052074193954468,
+        "packets": 28,
+        "avg_packet_size": 1201.3214285714287,
+        "score": 7,
+        "reasons": [
+          "medium_outbound_32.8KB",
+          "asymmetric_flow",
+          "large_packets_1201B"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52606 -> 104.21.64.1:80 (TCP)",
+        "total_bytes": 32199,
+        "byte_rate": 1604.9339309674124,
+        "duration": 20.06250810623169,
+        "packets": 27,
+        "avg_packet_size": 1192.5555555555557,
+        "score": 7,
+        "reasons": [
+          "medium_outbound_31.4KB",
+          "asymmetric_flow",
+          "large_packets_1193B"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52607 -> 104.21.80.1:80 (TCP)",
+        "total_bytes": 32179,
+        "byte_rate": 1603.4286644321614,
+        "duration": 20.06886911392212,
+        "packets": 27,
+        "avg_packet_size": 1191.8148148148148,
+        "score": 7,
+        "reasons": [
+          "medium_outbound_31.4KB",
+          "asymmetric_flow",
+          "large_packets_1192B"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52608 -> 104.16.231.132:80 (TCP)",
+        "total_bytes": 36504,
+        "byte_rate": 1820.6028768590968,
+        "duration": 20.050501108169556,
+        "packets": 30,
+        "avg_packet_size": 1216.8,
+        "score": 7,
+        "reasons": [
+          "medium_outbound_35.6KB",
+          "asymmetric_flow",
+          "large_packets_1217B"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52609 -> 104.21.80.1:80 (TCP)",
+        "total_bytes": 35082,
+        "byte_rate": 1736.090750574341,
+        "duration": 20.20746898651123,
+        "packets": 29,
+        "avg_packet_size": 1209.7241379310344,
+        "score": 7,
+        "reasons": [
+          "medium_outbound_34.3KB",
+          "asymmetric_flow",
+          "large_packets_1210B"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52610 -> 104.21.80.1:80 (TCP)",
+        "total_bytes": 35029,
+        "byte_rate": 1744.1197183606037,
+        "duration": 20.084057092666626,
+        "packets": 29,
+        "avg_packet_size": 1207.896551724138,
+        "score": 7,
+        "reasons": [
+          "medium_outbound_34.2KB",
+          "asymmetric_flow",
+          "large_packets_1208B"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52611 -> 104.16.231.132:80 (TCP)",
+        "total_bytes": 36519,
+        "byte_rate": 1808.8890011372946,
+        "duration": 20.188635110855103,
+        "packets": 30,
+        "avg_packet_size": 1217.3,
+        "score": 7,
+        "reasons": [
+          "medium_outbound_35.7KB",
+          "asymmetric_flow",
+          "large_packets_1217B"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52612 -> 104.21.80.1:80 (TCP)",
+        "total_bytes": 32215,
+        "byte_rate": 1604.7603809714196,
+        "duration": 20.074648141860962,
+        "packets": 27,
+        "avg_packet_size": 1193.148148148148,
+        "score": 7,
+        "reasons": [
+          "medium_outbound_31.5KB",
+          "asymmetric_flow",
+          "large_packets_1193B"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52613 -> 104.21.80.1:80 (TCP)",
+        "total_bytes": 32207,
+        "byte_rate": 1602.7995993936825,
+        "duration": 20.094215154647827,
+        "packets": 27,
+        "avg_packet_size": 1192.851851851852,
+        "score": 7,
+        "reasons": [
+          "medium_outbound_31.5KB",
+          "asymmetric_flow",
+          "large_packets_1193B"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52614 -> 104.16.230.132:80 (TCP)",
+        "total_bytes": 32235,
+        "byte_rate": 1604.2424485413276,
+        "duration": 20.09359622001648,
+        "packets": 27,
+        "avg_packet_size": 1193.888888888889,
+        "score": 7,
+        "reasons": [
+          "medium_outbound_31.5KB",
+          "asymmetric_flow",
+          "large_packets_1194B"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52615 -> 104.21.80.1:80 (TCP)",
+        "total_bytes": 35060,
+        "byte_rate": 1746.8492581269124,
+        "duration": 20.07042098045349,
+        "packets": 29,
+        "avg_packet_size": 1208.9655172413793,
+        "score": 7,
+        "reasons": [
+          "medium_outbound_34.2KB",
+          "asymmetric_flow",
+          "large_packets_1209B"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52616 -> 104.21.112.1:80 (TCP)",
+        "total_bytes": 32183,
+        "byte_rate": 1603.3230465028503,
+        "duration": 20.072685956954956,
+        "packets": 27,
+        "avg_packet_size": 1191.962962962963,
+        "score": 7,
+        "reasons": [
+          "medium_outbound_31.4KB",
+          "asymmetric_flow",
+          "large_packets_1192B"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52617 -> 104.21.112.1:80 (TCP)",
+        "total_bytes": 32201,
+        "byte_rate": 1602.715737821386,
+        "duration": 20.091522932052612,
+        "packets": 27,
+        "avg_packet_size": 1192.6296296296296,
+        "score": 7,
+        "reasons": [
+          "medium_outbound_31.4KB",
+          "asymmetric_flow",
+          "large_packets_1193B"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52618 -> 104.16.230.132:80 (TCP)",
+        "total_bytes": 33676,
+        "byte_rate": 1669.5496314830818,
+        "duration": 20.170709133148193,
+        "packets": 28,
+        "avg_packet_size": 1202.7142857142858,
+        "score": 7,
+        "reasons": [
+          "medium_outbound_32.9KB",
+          "asymmetric_flow",
+          "large_packets_1203B"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52623 -> 20.190.157.9:443 (TCP)",
+        "total_bytes": 1925,
+        "byte_rate": 5104.921163011549,
+        "duration": 0.3770871162414551,
+        "packets": 15,
+        "avg_packet_size": 128.33333333333334,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52624 -> 52.167.249.196:443 (TCP)",
+        "total_bytes": 4630,
+        "byte_rate": 7690.34159315095,
+        "duration": 0.6020538806915283,
+        "packets": 15,
+        "avg_packet_size": 308.6666666666667,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52625 -> 52.167.249.196:443 (TCP)",
+        "total_bytes": 2042,
+        "byte_rate": 4202.3135025229285,
+        "duration": 0.48592281341552734,
+        "packets": 13,
+        "avg_packet_size": 157.07692307692307,
+        "score": 4,
+        "reasons": [
+          "asymmetric_flow"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "flow": "10.6.13.133:52626 -> 104.16.230.132:80 (TCP)",
+        "total_bytes": 32229,
+        "byte_rate": 1606.1426652929717,
+        "duration": 20.0660879611969,
+        "packets": 27,
+        "avg_packet_size": 1193.6666666666667,
+        "score": 7,
+        "reasons": [
+          "medium_outbound_31.5KB",
+          "asymmetric_flow",
+          "large_packets_1194B"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52628 -> 104.21.112.1:80 (TCP)",
+        "total_bytes": 32206,
+        "byte_rate": 1603.439846871347,
+        "duration": 20.085567951202393,
+        "packets": 27,
+        "avg_packet_size": 1192.8148148148148,
+        "score": 7,
+        "reasons": [
+          "medium_outbound_31.5KB",
+          "asymmetric_flow",
+          "large_packets_1193B"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52629 -> 104.16.230.132:80 (TCP)",
+        "total_bytes": 33654,
+        "byte_rate": 1678.4248686978808,
+        "duration": 20.050942182540894,
+        "packets": 28,
+        "avg_packet_size": 1201.9285714285713,
+        "score": 7,
+        "reasons": [
+          "medium_outbound_32.9KB",
+          "asymmetric_flow",
+          "large_packets_1202B"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52630 -> 104.16.230.132:80 (TCP)",
+        "total_bytes": 32209,
+        "byte_rate": 1606.5195788896667,
+        "duration": 20.048930883407593,
+        "packets": 27,
+        "avg_packet_size": 1192.9259259259259,
+        "score": 7,
+        "reasons": [
+          "medium_outbound_31.5KB",
+          "asymmetric_flow",
+          "large_packets_1193B"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52631 -> 104.21.112.1:80 (TCP)",
+        "total_bytes": 33622,
+        "byte_rate": 1672.8854673338965,
+        "duration": 20.09820795059204,
+        "packets": 28,
+        "avg_packet_size": 1200.7857142857142,
+        "score": 7,
+        "reasons": [
+          "medium_outbound_32.8KB",
+          "asymmetric_flow",
+          "large_packets_1201B"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52632 -> 104.21.112.1:80 (TCP)",
+        "total_bytes": 32220,
+        "byte_rate": 1606.177680422301,
+        "duration": 20.060047149658203,
+        "packets": 27,
+        "avg_packet_size": 1193.3333333333333,
+        "score": 7,
+        "reasons": [
+          "medium_outbound_31.5KB",
+          "asymmetric_flow",
+          "large_packets_1193B"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52633 -> 104.16.231.132:80 (TCP)",
+        "total_bytes": 32214,
+        "byte_rate": 1607.345646854829,
+        "duration": 20.0417377948761,
+        "packets": 27,
+        "avg_packet_size": 1193.111111111111,
+        "score": 7,
+        "reasons": [
+          "medium_outbound_31.5KB",
+          "asymmetric_flow",
+          "large_packets_1193B"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52638 -> 104.21.96.1:80 (TCP)",
+        "total_bytes": 32187,
+        "byte_rate": 1603.4640999850774,
+        "duration": 20.07341480255127,
+        "packets": 27,
+        "avg_packet_size": 1192.111111111111,
+        "score": 7,
+        "reasons": [
+          "medium_outbound_31.4KB",
+          "asymmetric_flow",
+          "large_packets_1192B"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "flow": "10.6.13.133:52639 -> 104.21.112.1:80 (TCP)",
+        "total_bytes": 32204,
+        "byte_rate": 1603.7327111159036,
+        "duration": 20.080652952194214,
+        "packets": 27,
+        "avg_packet_size": 1192.7407407407406,
+        "score": 7,
+        "reasons": [
+          "medium_outbound_31.4KB",
+          "asymmetric_flow",
+          "large_packets_1193B"
+        ],
+        "confidence": "HIGH"
+      }
+    ],
+    "beaconing": [],
+    "dns_tunneling": [
+      {
+        "flow": "10.6.13.133 -> 10.6.13.3 (DNS aggregated)",
+        "dns_flows": 121,
+        "total_queries": 121,
+        "avg_size": 138.56198347107437,
+        "max_size": 114.66666666666667,
+        "qps": 0.060156075474875906,
+        "query_rate": 0.060156075474875906,
+        "duration": 2011.4344069957733,
+        "score": 5,
+        "reasons": [
+          "high_flow_count_121",
+          "large_dns_115B"
+        ],
+        "confidence": "MEDIUM"
+      }
+    ],
+    "icmp_tunneling": [],
+    "slowloris": [],
+    "fragmentation": [
+      {
+        "target": "10.6.13.255",
+        "fragment_count": 87,
+        "unique_sources": 1,
+        "confidence": "MEDIUM"
+      },
+      {
+        "target": "10.6.13.3",
+        "fragment_count": 280,
+        "unique_sources": 1,
+        "confidence": "MEDIUM"
+      },
+      {
+        "target": "10.6.13.133",
+        "fragment_count": 1922,
+        "unique_sources": 22,
+        "confidence": "MEDIUM"
+      },
+      {
+        "target": "13.107.42.16",
+        "fragment_count": 55,
+        "unique_sources": 1,
+        "confidence": "MEDIUM"
+      },
+      {
+        "target": "23.212.185.76",
+        "fragment_count": 111,
+        "unique_sources": 1,
+        "confidence": "MEDIUM"
+      },
+      {
+        "target": "23.198.7.186",
+        "fragment_count": 62,
+        "unique_sources": 1,
+        "confidence": "MEDIUM"
+      },
+      {
+        "target": "142.250.115.99",
+        "fragment_count": 364,
+        "unique_sources": 1,
+        "confidence": "MEDIUM"
+      },
+      {
+        "target": "205.174.24.80",
+        "fragment_count": 415,
+        "unique_sources": 1,
+        "confidence": "MEDIUM"
+      },
+      {
+        "target": "142.250.138.97",
+        "fragment_count": 127,
+        "unique_sources": 1,
+        "confidence": "MEDIUM"
+      },
+      {
+        "target": "142.250.115.94",
+        "fragment_count": 256,
+        "unique_sources": 1,
+        "confidence": "MEDIUM"
+      },
+      {
+        "target": "13.107.246.57",
+        "fragment_count": 66,
+        "unique_sources": 1,
+        "confidence": "MEDIUM"
+      },
+      {
+        "target": "173.194.208.94",
+        "fragment_count": 54,
+        "unique_sources": 1,
+        "confidence": "MEDIUM"
+      },
+      {
+        "target": "109.61.92.48",
+        "fragment_count": 71,
+        "unique_sources": 1,
+        "confidence": "MEDIUM"
+      },
+      {
+        "target": "157.240.24.13",
+        "fragment_count": 57,
+        "unique_sources": 1,
+        "confidence": "MEDIUM"
+      },
+      {
+        "target": "104.21.112.1",
+        "fragment_count": 388,
+        "unique_sources": 1,
+        "confidence": "MEDIUM"
+      },
+      {
+        "target": "83.137.149.15",
+        "fragment_count": 12204,
+        "unique_sources": 1,
+        "confidence": "MEDIUM"
+      }
+    ],
+    "protocol_anomalies": [
+      {
+        "flow": "10.6.13.133:63805 -> 23.198.7.186:443 (UDP)",
+        "expected_proto": "TCP",
+        "actual_proto": "UDP",
+        "packets": 20
+      },
+      {
+        "flow": "10.6.13.133:61141 -> 23.198.7.186:443 (UDP)",
+        "expected_proto": "TCP",
+        "actual_proto": "UDP",
+        "packets": 15
+      },
+      {
+        "flow": "10.6.13.133:52079 -> 23.198.7.186:443 (UDP)",
+        "expected_proto": "TCP",
+        "actual_proto": "UDP",
+        "packets": 176
+      },
+      {
+        "flow": "10.6.13.133:64463 -> 23.198.7.186:443 (UDP)",
+        "expected_proto": "TCP",
+        "actual_proto": "UDP",
+        "packets": 47
+      },
+      {
+        "flow": "10.6.13.133:58298 -> 23.198.7.182:443 (UDP)",
+        "expected_proto": "TCP",
+        "actual_proto": "UDP",
+        "packets": 23
+      },
+      {
+        "flow": "10.6.13.133:53770 -> 23.212.185.76:443 (UDP)",
+        "expected_proto": "TCP",
+        "actual_proto": "UDP",
+        "packets": 27
+      }
+    ]
+  }
+}
