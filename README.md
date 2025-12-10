@@ -10,7 +10,7 @@ the core of our project
 
 With web application:
 1. Git clone the repository
-2. Download the required libraries: scapy, dpkt, numpy, flask
+2. Download the required libraries: dpkt, numpy, flask, reportlab
 3. Run: python3 ./app.py
 4. Follow IP Address to a browser to view
 5. Import .pcap file to see results
